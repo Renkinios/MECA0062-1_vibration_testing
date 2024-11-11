@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 number_data = 2
 name_data = f"../data/first_lab/DPsv0000{number_data}.mat"
 name_set = f"set_{number_data}"
-print("ici #######################",name_data)
 data = ed.extract_data(name_data)
 
 pld.bode_plot(data,name_set)

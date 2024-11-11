@@ -4,7 +4,7 @@ import first_data_fct as fdf
 import os
 
 def cmf_plot(freq, cmf ,set_name):
-    save_dir = f"../figures/{set_name}"
+    save_dir = f"../figures/first_lab/{set_name}"
     save_path = f"{save_dir}/CMIF.pdf"
     plt.figure(figsize=(10, 5))
     plt.semilogy(freq, cmf)
@@ -17,7 +17,7 @@ def cmf_plot(freq, cmf ,set_name):
 
 def bode_plot(data, set_name):
     # Chemin de sauvegarde
-    save_dir = f"../figures/{set_name}"
+    save_dir = f"../figures/first_lab/{set_name}"
     save_path = f"{save_dir}/Bode_plot.pdf"
     
     # Créer le dossier s'il n'existe pas
@@ -43,7 +43,7 @@ def bode_plot(data, set_name):
 
 def coherence_plot(data, set_name):
     # Chemin de sauvegarde
-    save_dir = f"../figures/{set_name}"
+    save_dir = f"../figures/first_lab/{set_name}"
     save_path = f"{save_dir}/Coherence_plot.pdf"
     
     # Créer le dossier s'il n'existe pas
@@ -73,7 +73,7 @@ def plot_exitasion_shock(data, set_name) :
     plt.plot(freq, amplitude)
     plt.xlabel("Frequency [Hz]", fontsize=15)
     plt.ylabel("Amplitude [N]", fontsize=15)
-    plt.savefig(f"../figures/{set_name}/exitasion_shock.pdf", format="pdf", dpi=300)
+    plt.savefig(f"../figures/first_lab/{set_name}/exitasion_shock.pdf", format="pdf", dpi=300)
     plt.close()
 
 def plot_time_shock(data, set_name) :
@@ -83,7 +83,7 @@ def plot_time_shock(data, set_name) :
     plt.plot(time, amplitude)
     plt.xlabel("Time [s]", fontsize=15)
     plt.ylabel("Amplitude [N]", fontsize=15)
-    plt.savefig(f"../figures/{set_name}/time_shock.pdf", format="pdf", dpi=300)
+    plt.savefig(f"../figures/first_lab/{set_name}/time_shock.pdf", format="pdf", dpi=300)
     plt.close()
 
 
