@@ -22,12 +22,7 @@ def compute_cmif(data) :
 
 def compute_peak_picking_method(H, freq, plot=True, set_name="") :
     # Calculer l'amplitude du signal
-    amplitude = np.abs(H)
-    
-    # Créer la figure et tracer l'amplitude
-    plt.figure(figsize=(8, 5))
-    plt.plot(freq, amplitude, color="darkblue", linewidth=1.5, label="Amplitude")
-    
+    amplitude = np.abs(H)    
     # Identifier l'indice du pic principal
     main_peak_index = np.argmax(amplitude)
     main_peak_amplitude = amplitude[main_peak_index]
@@ -45,7 +40,6 @@ def compute_peak_picking_method(H, freq, plot=True, set_name="") :
     if plot :
         save_dir = f"../figures/first_lab/{set_name}"
         save_path = f"{save_dir}/peak_method.pdf"
-        
         plt.figure(figsize=(8, 5))
         plt.plot(freq, amplitude, color="darkblue", linewidth=1.5, label="Amplitude")
         plt.vlines([f_Walpha, f_Wbeta], ymin=0, ymax=amplitude[idx_Walpha], color="gray", linestyle="--", linewidth=1)
@@ -86,6 +80,8 @@ def compute_peak_picking_method(H, freq, plot=True, set_name="") :
 
 
 def compute_circle_fit_method(freq, H, plot=True, set_name="") :
+    omega = 2 * np.pi * freq
+    H     = H/(1j*omega)
     data = pd.DataFrame({
     'np.real(cub_freq)': np.real(H),
     'np.imag(cub_freq)': np.imag(H),
@@ -96,13 +92,15 @@ def compute_circle_fit_method(freq, H, plot=True, set_name="") :
     w_r = freq[arg_r]
 
     damping_matrix = []
-    op_r = [2 * c[0]- np.real(H)[arg_r], 2 * c[1] - np.imag(H)[arg_r]]
-    for i in range(1, 10) :
+    op_r    = [2 * c[0]- np.real(H)[arg_r], 2 * c[1] - np.imag(H)[arg_r]]
+    a_ligne = (op_r[1] - np.imag(H)[arg_r]) / (op_r[0] - np.real(H)[arg_r])
+    b       = np.imag(H)[arg_r] - a_ligne * np.real(H)[arg_r]
+    for i in range(1, len(freq)//2) :
         arg_wb = arg_r - i
         arg_wa = arg_r + i
         w_a = freq[arg_wa]
         w_b = freq[arg_wb]
-        # print(f"Frequency : {w_a}, {w_b}")
+        print(f"Frequency : {w_a}, {w_b}")
         # angle_wb = np.arctan2(np.abs(np.imag(H)[arg_wb] - c[1]), np.abs(np.real(H)[arg_wb] - c[0]))
         # angle_wa = np.arctan2(np.abs(np.imag(H)[arg_wa] - c[1]), np.abs(np.real(H)[arg_wa] - c[0]))
     
@@ -114,20 +112,22 @@ def compute_circle_fit_method(freq, H, plot=True, set_name="") :
         norme_rc = np.linalg.norm(rc)
         angle_wb = np.arccos(np.dot(ra, rc) / (norme_ra * norme_rc))
         angle_wa = np.arccos(np.dot(rb, rc) / (norme_rb * norme_rc))
-        plt.plot([op_r[0], np.real(H)[arg_wa]], [op_r[1], np.imag(H)[arg_wa]], color='r')
-        plt.plot([op_r[0], np.real(H)[arg_wb]], [op_r[1], np.imag(H)[arg_wb]], color='g')
-        print(f"Angle : {np.degrees(angle_wa)}, {np.degrees(angle_wb)}")
         # print(f"Ancle : {angle_wa}, {angle_wb}")
         damping = (w_a**2 - w_b**2)/(2 * w_r * (w_a * np.tan(angle_wa/2) + w_b * np.tan(angle_wb/2)))
-        print(f"Damping : {damping}")
         if damping < 0 :
             break # This mean that the arg_wb is not good like the frequency is not perfectly divided by 2 
-        if op_r[0] <  np.real(H)[arg_wa] or op_r[0] > np.real(H)[arg_wb] :
+        y_line_wa = a_ligne * np.real(H)[arg_wa] + b
+        y_line_wb = a_ligne * np.real(H)[arg_wb] + b
+        if y_line_wa > np.imag(H)[arg_wa] :
             break
-            
-        
-        # print("test : \t",(w_a**2 - w_b**2))
+        if y_line_wb < np.imag(H)[arg_wb] :
+            break
         damping_matrix.append(damping)
+        if plot :
+            plt.plot([op_r[0], np.real(H)[arg_wa]], [op_r[1], np.imag(H)[arg_wa]], color='r')
+            plt.plot([op_r[0], np.real(H)[arg_wb]], [op_r[1], np.imag(H)[arg_wb]], color='g')
+            # plt.plot([c[0], np.real(H)[arg_wa]], [c[1], np.imag(H)[arg_wa]], color='black')
+            # plt.plot([c[0], np.real(H)[arg_wb]], [c[1], np.imag(H)[arg_wb]], color='black')
     damping_matrix = np.array(damping_matrix)
     print("Damping matrix : ", damping_matrix)
 
