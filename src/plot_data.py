@@ -104,7 +104,7 @@ def plot_time_shock(data, set_name):
 def plot_accelerometer_time(data, set_name):
     time = data["X2"][:, 0]
     amplitude = data["X2"][:, 1]
-    plt.figure(figsize=(10, 6))  # Augmenter la taille de la figure
+    plt.figure(figsize=(10, 9))  # Augmenter la taille de la figure
     plt.plot(time, amplitude)
     plt.xlabel(r"Time [s]", fontsize=18)  # Taille des labels encore plus grande
     plt.ylabel(r"Amplitude [g]", fontsize=18)
@@ -112,3 +112,31 @@ def plot_accelerometer_time(data, set_name):
     plt.savefig(f"../figures/first_lab/{set_name}/time_accelerometer.pdf", format="pdf", dpi=300, bbox_inches='tight')
     # plt.show()
     plt.close()
+
+def viz_stabilisation_diagram(dic_order, cmif, freq):
+    fig, ax1 = plt.subplots(figsize=(10, 8))
+    ax1.set_xlabel(r"Frequency [Hz]")
+    ax1.set_ylabel(r"CMIF", color='blue')
+    ax1.tick_params(axis='y', labelcolor='blue')
+    ax1.semilogy(freq, cmif, color='blue')
+
+    # Deuxième axe pour les stabilisations
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("Poles", color='black')
+    ax2.tick_params(axis='y', labelcolor='black')
+    for key in dic_order.keys():
+        w_i = dic_order[key]["w_i"]
+        stable = dic_order[key]["stable"]
+        # print(stable)
+        # ax2.axhline(y=key, color='black', linestyle='--', alpha=0.6)
+        for i, w in enumerate(w_i) :
+            point_color ='red' if stable[i] == 'd' else 'black'
+            if stable[i] == 'x':
+                ax2.scatter(w/2/np.pi, key, marker = stable[i], s=15, color=point_color)
+            else:
+                ax2.scatter(w/2/np.pi, key, marker = stable[i], s=20, facecolors='none', color=point_color)
+    plt.xlim(0, 200)
+    plt.show()
+
+
+
