@@ -121,11 +121,11 @@ def representation_mode(real_mode, nbr = 1, amplifactor =20):
     # real_node[40:46,2]  += real_mode[34:40]*20
     # real_node[48:54,0]  -= real_mode[40:46]*20
     max_real = np.max(real_mode)
-    real_node[0,2]      -= real_mode[0]    *amplifactor/max_real
-    real_node[1:28 ,2]  += real_mode[1:28] *amplifactor/max_real
-    real_node[30:58,2]  += real_mode[28:56]*amplifactor/max_real
-    real_node[60:66,2]  += real_mode[56:62]*amplifactor/max_real
-    real_node[68:74,2]  += real_mode[62:68]*amplifactor/max_real
+    real_node[0,2]      += real_mode[0]    *amplifactor/max_real
+    real_node[1:28 ,2]  -= real_mode[1:28] *amplifactor/max_real
+    real_node[30:58,2]  -= real_mode[28:56]*amplifactor/max_real
+    real_node[60:66,2]  -= real_mode[56:62]*amplifactor/max_real
+    real_node[68:74,2]  -= real_mode[62:68]*amplifactor/max_real
     real_node[76:82,0]  -= real_mode[68:74]*amplifactor/max_real
 
     # test_x = np.zeros(real_mode.shape[0])
