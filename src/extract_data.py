@@ -17,29 +17,21 @@ def extract_H_general(number_data_set) :
     """
     number_shock = len(number_data_set) 
     number_accelerometer = 3
-    matrix_H = np.zeros((number_shock, number_accelerometer), dtype=object) # use the fact that Hrs = Hsr
+    sample_data = extract_data(f"../data/sec_lab/DPsv{str(number_data_set[0]).zfill(5)}.mat")
+    vector_length = len(sample_data["H1_2"][:, 1])
+    # idx           = (np.real(sample_data["H1_2"][:, 0])/2/np.pi >= 0) & (np.real(sample_data["H1_2"][:, 0])/2/np.pi <= 180)
+    vector_length = len(sample_data["H1_2"][:, 1])
+    matrix_H = np.zeros((number_shock, number_accelerometer, vector_length), dtype=np.complex_) # use the fact that Hrs = Hsr
     for i, number_data in enumerate(number_data_set):
         number_data_set = str(number_data).zfill(5)
-        name_data = f"../data/sec_lab/DPsv{number_data_set}.mat"
-        data = extract_data(name_data)
-        if number_data == 1:
-            matrix_H[i][0]= - data["H1_2"][:, 1]
-        else:
-            matrix_H[i][0]= data["H1_2"][:, 1] 
-        matrix_H[i][1] = data["H1_3"][:, 1]
-        matrix_H[i][2] = data["H1_4"][:, 1]
+        name_data       = f"../data/sec_lab/DPsv{number_data_set}.mat"
+        data            = extract_data(name_data)
+        matrix_H[i][0]  = (data["H1_2"][:, 1])
+        matrix_H[i][1]  = (data["H1_3"][:, 1])
+        matrix_H[i][2]  = (data["H1_4"][:, 1])
     freq = np.real(data["H1_2"][:, 0])
     return matrix_H, freq
 
-def get_H_lineFunction_freq(indice,idx_freq, H) : 
-    """ 
-    Return  H_gen in fuction of the frequence xith the dependance on line 
-    """
-    H_line      = H[indice]
-    H_line_freq = np.zeros(len(H_line), dtype=complex)
-    for i in range(len(H_line)) :
-        H_line_freq[i] = H_line[i][idx_freq]
-    return H_line_freq
 
 
 

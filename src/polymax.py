@@ -1,17 +1,18 @@
 import numpy as np
 import extract_data as ed
 from scipy import linalg
+from scipy.linalg import lstsq
+
 def get_polymax(H, freq,order_model,delta_t) :
-    M = np.zeros((len(H[0])* (order_model + 1), len(H[0]) * (order_model +1)),dtype=object)
+    M = np.zeros((len(H[0]) * (order_model + 1), len(H[0]) * (order_model +1)),dtype=object)
     for l in range(len(H)) :
         X_l = np.zeros((len(freq), order_model+1), dtype=complex)
         Y_l = []
         for n in range(len(freq)) :
-            H_line_freq = ed.get_H_lineFunction_freq(l,n,H)
-            # print("H_line freq \t",H_line_freq)
+            H_line_freq = H[l , : ,n]
             for m in range(order_model + 1) :
                 weigt_fct = 1
-                X_l[n][m] = weigt_fct *(np.exp(1j * 2 * np.pi * freq[n] * m * delta_t))
+                X_l[n][m] = weigt_fct * (np.exp(1j * 2 * np.pi * freq[n] * m * delta_t))
             Y_l.append(np.kron( - X_l[n], H_line_freq))
         Y_l  = np.array(Y_l)
         Xl_H = np.conjugate(X_l).T
@@ -19,7 +20,8 @@ def get_polymax(H, freq,order_model,delta_t) :
         R_l  = np.real(Xl_H @ X_l)
         S_l  = np.real(Xl_H @ Y_l)
         T_l  = np.real(Yl_H @ Y_l)
-        M += (T_l - S_l.T @ np.linalg.inv(R_l) @ S_l) 
+        M   += (T_l - S_l.T @ np.linalg.pinv(R_l) @ S_l) 
+    
     M *= 2
     M_11, M_12    = decomposition_M(M, H, order_model)
     alpha         = np.linalg.solve(M_11, -M_12)
@@ -29,10 +31,9 @@ def get_polymax(H, freq,order_model,delta_t) :
     w_i           = np.sqrt(np.real(eigenvals)**2 + np.imag(eigenvals)**2)
     damping_i     =  - np.real(eigenvals) / w_i
     arg_sorted    = np.argsort(w_i)
-    # print(eigenvals[arg_sorted])
     w_i           = w_i[arg_sorted]
     damping_i     = damping_i[arg_sorted]
-    return w_i, damping_i
+    return w_i, damping_i, eigenvals
 
 def decomposition_M(M, H, p) :
     m = len(H[0])
@@ -57,50 +58,106 @@ def get_C(alpha, order_model) :
 def get_stabilisation(dic_order):
     # Convertir les clés en une liste triée pour garantir l'ordre
     sorted_keys = sorted(dic_order.keys())
-    
-    for i in range(len(sorted_keys) - 1):  # On boucle sur les clés triées sauf la dernière
+    for i in range(len(sorted_keys) - 1): 
         key = sorted_keys[i]
         next_key = sorted_keys[i + 1]
         
         dic_n = dic_order[key]
         dic_n_next = dic_order[next_key]
         
-        for j, w in enumerate(dic_n["w_i"]):
-            w_next = np.array(dic_n_next["w_i"])
-            tol_low = (1 - 0.01) * w
-            tol_high = (1 + 0.01 ) * w
-            # print(tol_low,tol_high)
-            # print(w_next)
-            idx_w = np.where((w_next >= tol_low) & (w_next <= tol_high))[0]  # Utilisation correcte de numpy
+        for j, w in enumerate(dic_n_next["wn"]):
+            w_next   = np.array(dic_n["wn"])
+            tol_low  = (1 - 0.01) * w
+            tol_high = (1 + 0.01) * w
+            idx_w    = np.where((w_next >= tol_low) & (w_next <= tol_high))[0] 
+            if len(idx_w) == 0:
+                continue
+            else:
+                damping_n    = np.array(dic_n["zeta"])[idx_w]
+                damping_next = dic_n_next["zeta"][j]
+                tol_low  = (1 - 0.05) * damping_next
+                tol_high = (1 + 0.05) * damping_next
+                idx_damp = np.where((damping_n >= tol_low) & (damping_n <= tol_high))[0]
+                if len(idx_damp) == 0:
+                    dic_n_next["stable"][j] = "v"
+                else :
+                    dic_n_next["stable"][j] = "d"
 
-            damping_n = dic_n["damping_i"][j]
-            damping_next = np.array(dic_n_next["damping_i"])
-            tol_low  = (1 - 0.05 ) * damping_n
-            tol_high = (1 + 0.05) * damping_n
-            idx_damp = np.where((damping_next >= tol_low) & (damping_next <= tol_high))[0]
-            idx_stab = np.intersect1d(idx_damp, idx_w)
-            idx_damp = np.setdiff1d(idx_damp, idx_stab)
-            idx_w = np.setdiff1d(idx_w, idx_stab)
-            # print("idx_stab",idx_stab)
-            # print("idx_w",idx_w)
-            # print("idx_damp",idx_damp)  
-            for idx in idx_stab:
-                # print("stable")
-                dic_n_next["stable"][idx] = "d"
-            for idx in idx_w:
-                dic_n_next["stable"][idx] = "v"
-            for idx in idx_damp:
-                dic_n_next["stable"][idx] = "^"
-        
-        dic_order[next_key] = dic_n_next  # Mise à jour du dictionnaire avec les modifications
-        # print(dic_order[next_key]["stable"])
+        dic_order[next_key] = dic_n_next  
     
     return dic_order
 
                 
+def compute_lsfd(lambdak, f, H):
+    idx_f  = (f >= 0.001) 
+    f      = f[idx_f]
+    H      = H[:, 0, idx_f]
+    print("H shape: ", H.shape)
+    ni     = H.shape[0]      # number of references
+    no     = 1      # number of responses
+    n      = H.shape[1]      # length of frequency vector
+    nmodes = lambdak.shape[0]  # number of modes
+    omega = 2 * np.pi * f  # angular frequency
+    print("Poles: ", lambdak)
+    print("Omega: ", omega)
+    
 
+    # Factors in the freqeuncy response function
+    b = 1 / np.subtract.outer(1j * omega, lambdak).T
+    c = 1 / np.subtract.outer(1j * omega, np.conj(lambdak)).T
 
-            
-            
+    # Separate complex data to real and imaginary part due to the equation each real need ot be equal to each other
+    hr = H.real
+    hi = H.imag
+    br = b.real
+    bi = b.imag
+    cr = c.real
+    ci = c.imag
 
-        
+    # Stack the data together in order to obtain 2D matrix
+    hri = np.dstack((hr, hi))
+    bri = np.hstack((br+cr,  bi+ci))  # P_k(w)
+    cri = np.hstack((-bi+ci, br-cr))  # Q_k(w)
+
+    ur_multiplyer = np.ones(n)
+    ur_zeros      = np.zeros(n)
+    lr_multiplyer = -1/(omega**2)
+
+    urr = np.hstack((ur_multiplyer, ur_zeros))
+    uri = np.hstack((ur_zeros, ur_multiplyer))
+    lrr = np.hstack((lr_multiplyer, ur_zeros))
+    lri = np.hstack((ur_zeros, lr_multiplyer))
+    bcri = np.vstack((bri, cri, urr, uri, lrr, lri))
+    # Reshape 3D array to 2D for least squares coputation
+    hri = hri.reshape(ni*no, 2*n)
+    # Compute the modal constants (residuals) and upper and lower residuals
+    uv = lstsq(bcri.T, hri.T)[0]
+
+    # Reshape 2D results to 3D
+    uv = uv.T.reshape(ni, no, 2*nmodes+4)
+    u   = uv[:, :, :nmodes]
+    v   = uv[:, :, nmodes:-4]
+    urr = uv[:, :, -4]
+    uri = uv[:, :, -3]
+    lrr = uv[:, :, -2]
+    lri = uv[:, :, -1]
+
+    a  = u + 1j*v       # Modal constant (residue)
+    ur = urr + 1j*uri  # Upper residual
+    lr = lrr + 1j*lri  # Lower residual
+
+    return a, lr, ur
+
+def extract_eigenmode(A) :
+    """
+    Eingenmode is extract using the residue method
+    """
+    n, q = A.shape # m represente the accelrometer n the number of shock and q the mode
+    mode    = np.zeros((n,q), dtype=complex)
+    for i in range(q):
+        mode_s    = np.sqrt(A[0,i])
+        mode[0,i] = mode_s
+        for j in range(1,n):
+            mode[j,i] = A[j,i]/mode_s
+
+    return mode
