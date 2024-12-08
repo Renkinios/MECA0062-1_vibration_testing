@@ -1,6 +1,7 @@
 import scipy.io
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def extract_data(data_set) :
@@ -31,6 +32,27 @@ def extract_H_general(number_data_set) :
         matrix_H[i][2]  = (data["H1_4"][:, 1])
     freq = np.real(data["H1_2"][:, 0])
     return matrix_H, freq
+
+def extract_mode_samcef():
+    data = pd.read_csv("../data/mode_samcef/mode_1.csv", sep='\s+', engine='python')
+
+    # Renaming columns directly for clarity
+    data.columns = ["X_Coord", "Y_Coord", "Z_Coord", "X_Data", "Y_Data", "Z_Data", "Unused1", "Unused2", "Unused3"]
+
+    # Keep only relevant columns
+    cleaned_data = data[["X_Coord", "Y_Coord", "Z_Coord", "X_Data", "Y_Data", "Z_Data"]]
+    
+    # Drop rows with missing values and limit to first few rows
+    cleaned_data = cleaned_data.dropna()
+    
+    return cleaned_data
+
+def extract_node_shock():
+    df = pd.read_csv("../data/nodes_coordinates.csv")
+    
+    # Convert to numpy array
+    nodes = df.to_numpy()
+    return nodes
 
 
 

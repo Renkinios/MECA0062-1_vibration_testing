@@ -1,58 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt 
-
+import extract_data as ed
 import numpy as np
 
 def representation_mode(real_mode, nbr = 1, amplifactor =20):
-    start_wing_x, start_wing_y, start_wing_z = 0, 750, 0
-    start_horizontaltail_tail_x, start_horizontaltail_tail_y, start_horizontaltail_tail_z = 50, 0, 75
-    start_vertical_tail_x, start_vertical_tail_y, start_vertical_tail_z = 0, 0, 150
-
-    node_right_wing = np.array([
-        [start_wing_x + 750 - i * 50, start_wing_y + 100 - j * 100, start_wing_z]
-        for i in range(15)
-        for j in range(2)
-    ])
-
-    node_left_wing = np.array([
-        [start_wing_x - 750 + i * 50, (start_wing_y + 100 -j * 100), start_wing_z]
-        for i in range(15)
-        for j in range(2)
-    ])
-
-    node_right_horizontal_tail = np.array([
-        [start_horizontaltail_tail_x + 150 - i * 50, start_horizontaltail_tail_y +100 - j * 100, start_horizontaltail_tail_z]
-        for i in range(4)
-        for j in range(2)
-    ])
-
-    node_left_horizontal_tail = np.array([
-        [- start_horizontaltail_tail_x - 150 + i * 50, (start_horizontaltail_tail_y +100 - j * 100), start_horizontaltail_tail_z]
-        for i in range(4)
-        for j in range(2)
-    ])
-
-    node_vertical_tail = np.array([
-        [start_vertical_tail_x, start_vertical_tail_y +100 - j * 100, start_vertical_tail_z + 150 - 50 * i]
-        for i in range(4)
-        for j in range(2)
-    ])
-
-    # print("horizontal tail left \n",node_left_horizontal_tail)
-    # print("horizontal tail right \n",node_right_horizontal_tail)
-
-
-    # print("vertical tail \n ",node_vertical_tail)
-    # print("wing right\n",node_right_wing.shape)
-    # print("wing left\n",node_left_wing)
-
-    nodes = np.concatenate([node_right_wing, node_left_wing, node_right_horizontal_tail, node_left_horizontal_tail, node_vertical_tail])
+    nodes = ed.extract_node_shock()
     def generate_elements(start, end, step, offset):
         return [[i, i + offset] for i in range(start, end, step)]
     elements = []
-
-
-
     # Wing right
     elements.extend(generate_elements(0, 28, 2, 2))
     elements.extend(generate_elements(1, 29, 2, 2))
@@ -121,12 +76,22 @@ def representation_mode(real_mode, nbr = 1, amplifactor =20):
     # real_node[40:46,2]  += real_mode[34:40]*20
     # real_node[48:54,0]  -= real_mode[40:46]*20
     max_real = np.max(real_mode)
-    real_node[0,2]      -= real_mode[0]    *amplifactor/max_real
-    real_node[1:28 ,2]  += real_mode[1:28] *amplifactor/max_real
-    real_node[30:58,2]  += real_mode[28:56]*amplifactor/max_real
-    real_node[60:66,2]  += real_mode[56:62]*amplifactor/max_real
+    real_node[0,2]      += real_mode[0]    *amplifactor/max_real
+    real_node[1:28 ,2]  -= real_mode[1:28] *amplifactor/max_real
+    real_node[30:58,2]  -= real_mode[28:56]*amplifactor/max_real
+    real_node[60:66,2]  -= real_mode[56:62]*amplifactor/max_real
     real_node[68:74,2]  += real_mode[62:68]*amplifactor/max_real
-    real_node[76:82,0]  -= real_mode[68:74]*amplifactor/max_real
+    real_node[76:82,0]  += real_mode[68:74]*amplifactor/max_real
+
+    # real_node[0,2]      += real_mode[0]    *amplifactor/max_real
+    # real_node[1:14 ,2]  -= real_mode[1:14] *amplifactor/max_real
+
+
+    # real_node[15:28 ,2] -= real_mode[14:27] *amplifactor/max_real
+    # real_node[30:58,2]  -= real_mode[27:55]*amplifactor/max_real
+    # real_node[60:66,2]  += real_mode[55:61]*amplifactor/max_real
+    # real_node[68:74,2]  += real_mode[61:67]*amplifactor/max_real
+    # real_node[76:82,0]  += real_mode[67:73]*amplifactor/max_real
 
     # test_x = np.zeros(real_mode.shape[0])
     # test_x[0]      -= real_mode[0]    *amplifactor
@@ -163,7 +128,7 @@ def representation_mode(real_mode, nbr = 1, amplifactor =20):
 
 
     # Légendes et labels
-    ax.set_title("3D Plot of Wing and Tail Nodes", fontsize=14)
+    ax.set_title(f"3D Plot of Wing and Tail Nodes {nbr}", fontsize=14)
     ax.set_xlabel("X-axis (mm)")
     ax.set_ylabel("Y-axis (mm)")
     ax.set_zlabel("Z-axis (mm)")

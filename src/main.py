@@ -53,157 +53,100 @@ array2       = np.arange(31, 59)
 array3       = np.arange(61, 79)  
 result_array = np.concatenate((array1, array2, array3))
 
+# array1       = np.arange(1, 14) 
+# array2       = np.arange(15, 29) 
+
+# array3       = np.arange(31, 59) 
+# array4       = np.arange(61, 79)  
+# result_array = np.concatenate((array1, array2, array3, array4))
+
 H, freq = ed.extract_H_general(result_array)
 delta_t = 1.9531 * 10**(-3) 
 modal   = {}
 
-for i in tqdm(range(29,31), desc="Polymax poles", unit="Poles"):
-# for i in range(20,100):
-    w_i, damping_i, eigenval = pm.get_polymax(H, freq, i, delta_t)
-    idx            = (w_i/2/np.pi >= 13) & (w_i/2/np.pi <= 180)
-    _, idx_unique  = np.unique(w_i[idx], return_index=True)
-    modal[i]       = {
-        "wn"       : w_i[idx][idx_unique], 
-        "zeta"     : damping_i[idx][idx_unique], 
-        "stable"   : ["x" for _ in range(len(w_i[idx]))],
-        "eigenval" : eigenval[idx][idx_unique]
-        }
+# for i in tqdm(range(29,74), desc="Polymax poles", unit="Poles"):
+# # for i in range(20,100):
+#     w_i, damping_i, eigenval = pm.get_polymax(H, freq, i, delta_t)
 
-dic_order = pm.get_stabilisation(modal)
+#     idx            = (w_i/2/np.pi >= 13) & (w_i/2/np.pi <= 180)
+#     _, idx_unique  = np.unique(w_i[idx], return_index=True)
+#     modal[i]       = {
+#         "wn"       : w_i[idx][idx_unique], 
+#         "zeta"     : damping_i[idx][idx_unique], 
+#         "stable"   : ["x" for _ in range(len(w_i[idx]))],
+#         "eigenval" : eigenval[idx][idx_unique]
+#         }
+
+# dic_order = pm.get_stabilisation(modal)
 # pld.viz_stabilisation_diagram(modal, cmif, freq_cmif)
-# selected_pole = [30,30,33,33,66,32,70,60,72,40,30,30,60]
-# freq = np.array([18.8371850177749,  
-#                                   40.132836645734095,
-#                                   87.73661054907369,
-#                                   89.67312969606662,
-#                                   97.53280910557633,
-#                                   105.18499940664444,
-#                                   117.87999526512655,
-#                                   125.18566897797119,
-#                                   125.65863056930331,
-#                                   130.0322772046283,
-#                                   135.10023859504435,
-#                                   143.17255674594142,
-#                                   166.22251319140528])
+# selected_pole = [30,30,33,33,55,32,40,63,55,53,30,30,37]
+# freq_pole = np.array([18.8371850177749, 40.132836645734095, 87.73661054907369,
+# 89.67312969606662, 97.53280910557633, 105.18499940664444, 117.87999526512655,
+# 125.18566897797119,125.65863056930331,130.0322772046283,
+# 135.10023859504435,143.17255674594142,166.22251319140528])
 
-selected_pole = [30,30]
-freq = np.array([18.8371850177749, 40.132836645734095])
-# idx_freq      = [0,   6, 13, 14, 18, 52, 52, 20, 67, 62, 33, 35, 46]
-# selected_pole = [25, 33]
-# idx_freq      = [0,   6]
-lambda_pole = np.zeros(len(selected_pole), dtype=complex)
-omega = np.zeros(len(selected_pole))
-idx_freq = np.zeros(len(selected_pole), dtype=int)
+# lambda_pole = np.zeros(len(selected_pole), dtype=complex)
+# omega = np.zeros(len(selected_pole))
+# idx_freq = np.zeros(len(selected_pole), dtype=int)
 
-for i in range(len(selected_pole)):
-    # Vérifier les données pour ce pole
-    stable_values = modal[selected_pole[i]]["stable"]
-    print(f"Stable values for pole {i}: {stable_values}")
+# for i in range(len(selected_pole)):
+#     # Vérifier les données pour ce pole
+#     stable_values = modal[selected_pole[i]]["stable"]
 
-    # Trouver les indices des 'd'
-    arg_stab = np.where(np.array(stable_values) == 'd')[0]
+#     # Trouver les indices des 'd'
+#     arg_stab = np.where(np.array(stable_values) == 'd')[0]
 
-    if len(arg_stab) == 0:
-        print(f"No stable poles found for pole {i}. Skipping...")
-        continue
+#     if len(arg_stab) == 0:
+#         print(f"No stable poles found for pole {i}. Skipping...")
+#         continue
 
-    print(f"Stable indices for pole {i}: {arg_stab}")
+#     # Extraire les valeurs correspondantes
+#     wn_stable = np.array(modal[selected_pole[i]]["wn"])[arg_stab]
+#     eigenval_stable = np.array(modal[selected_pole[i]]["eigenval"])[arg_stab]
 
-    # Extraire les valeurs correspondantes
-    wn_stable = np.array(modal[selected_pole[i]]["wn"])[arg_stab]
-    eigenval_stable = np.array(modal[selected_pole[i]]["eigenval"])[arg_stab]
 
-    print(f"Stable natural frequencies for pole {i}: {wn_stable}")
+#     # Calculer la différence en fréquence
+#     freq_diff = np.abs(wn_stable / (2 * np.pi) - freq_pole[i])
+#     idx = np.argmin(freq_diff)
 
-    # Calculer la différence en fréquence
-    freq_diff = np.abs(wn_stable / (2 * np.pi) - freq[i])
-    idx = np.argmin(freq_diff)
+#     # Mise à jour des résultats
+#     lambda_pole[i] = eigenval_stable[idx]
+#     omega[i] = wn_stable[idx]
+#     idx_freq[i] = arg_stab[idx]
 
-    # Mise à jour des résultats
-    lambda_pole[i] = eigenval_stable[idx]
-    omega[i] = wn_stable[idx]
-    idx_freq[i] = idx
+# print("Final omega (Hz):", omega / (2 * np.pi))
 
-    print(f"Selected stable eigenvalue for pole {i}: {lambda_pole[i]}")
-    print(f"Selected natural frequency for pole {i}: {omega[i]}")
-
-print("Final omega (Hz):", omega / (2 * np.pi))
-# print("Freq",omega/2/np.pi)
 # print("lambda pole",lambda_pole)
 # print("idx_freq",idx_freq)
 
 
-# lambda_pole = np.array([
-#      (-0.41919674864349765-118.39096931287311j), (-1.0031165201872752-252.09465482162784j)
+# final_omega_hz = np.array([
+#     18.84262616, 40.12242782, 87.85281287, 89.66141477, 143.33713324,
+#     105.19967891, 135.26689864, 125.57281791, 166.10382907, 135.28144599,
+#     135.2589153, 143.37188261, 169.56553806
 # ])
 
-
-# def getModeShapes(freq, FRF_matrix):
-#     # for i,freq in enumerate(self.eigenfreq) : 
-#     #     print(f"Eigenfrequency {i+1} ")
-#     #     self.q = np.arange(0, self.order[i] + 1, 1) 
-#     #     freqs,damp,eiv = self.PolyMAX()
-
-#     #     idx = np.argmin(np.abs(freqs - freq))
-#     #     pole.append(self.poles[idx])
-#     #     damping.append(damp[idx])
-#     # print("Poles",pole)
-#     # print("Damping",damping)
-#     pole = [(-0.41919674864349765-118.39096931287311j), (-1.0031165201872752-252.09465482162784j)]
-
-
-#     omega = freq * 2 * np.pi
-#     modes = []
-#     print("FRF_matrix", FRF_matrix.shape)
-#     n,m,p = FRF_matrix.shape
-#     print("len(FRF_matrix[0,:])", len(FRF_matrix[0]))
-#     for i in range(n):
-#         b = FRF_matrix[i,0,:]
-#         A = []
-
-#         for omeg in omega : 
-#             if omeg == 0:
-#                 omeg = 1e-6
-#             A_bis = []
-#             A_bis.append(1/(omeg**2))
-
-#             for p in pole :  
-#                 P = 1/(1j*omeg - p) + 1/(1j*omeg - np.conjugate(p))
-#                 A_bis.append(P)
-#                 Q = 1/(1j*omeg - p) - 1/(1j*omeg - np.conjugate(p))
-#                 A_bis.append(Q)
-
-#             A_bis.append(1)
-#             A.append(A_bis)
-
-#         A = np.array(A)
-
-
-#         x = np.linalg.lstsq(A,b,rcond=None)[0]
-#         x = x[1:-1]
-#         residue  = x[::2] + 1j * x[1::2]
-#         modes.append(residue)
-#     print("shape A", A.shape)
-#     print("Mode shape", np.array(modes).shape)
-#     print("Mode shape", np.array(modes))
-#     return np.array(modes)
-# # a, lr, ur   = pm.compute_lsfd(lambda_pole, freq, H)
-# # print("a",a.shape)
-# # print("a1",a[0,0])
-# mode = getModeShapes(freq,H)
-# print("Mode shape", mode.shape)
+lambda_pole = np.array([
+    -0.41919761 - 118.39096967j, -1.00311684 - 252.09465319j,
+    -2.95548289 + 551.98759087j, -1.9042592 + 563.35606549j,
+    -0.63729897 - 610.02198244j, -0.31541393 + 660.9890016j,
+    -6.21792925 - 741.42633958j, -2.01626186 + 786.73010206j,
+    -2.85199809 + 789.49204795j, -5.103421 - 817.43014699j,
+    -9.25476512 - 849.80643652j, -5.9185963 - 900.81266308j,
+    -1.45473844 + 1044.76438362j
+])
 
 
 
+a = pm.compute_lsfd(lambda_pole, freq, H)
 
-
-# mode      = pm.extract_eigenmode(mode)
-# abs_mode  = np.abs(mode)
-# sign      = np.sign(np.cos(np.angle(mode)))
-# real_mode = abs_mode * sign
-# # print(mode.shape)
-# for i in range(2):
-#     mode_pole = real_mode[:,i]
-#     rm.representation_mode(mode_pole,nbr = i, amplifactor=50)
-# # rm.representation_mode(real_mode[:,0],nbr = 0)
+mode      = pm.extract_eigenmode(a)
+abs_mode  = np.abs(mode)
+sign      = np.sign(np.cos(np.angle(mode)))
+real_mode = abs_mode * sign
+# print(mode.shape)
+for i in range(real_mode.shape[1]):
+    mode_pole = real_mode[:,i]
+    rm.representation_mode(mode_pole,nbr = i, amplifactor=50)
+# rm.representation_mode(real_mode[:,0],nbr = 0)
 

@@ -28,9 +28,11 @@ def get_polymax(H, freq,order_model,delta_t) :
     C             = get_C(alpha, order_model)
     eigenvals, x  = linalg.eig(C)
     eigenvals     = np.log(eigenvals) / delta_t
+
     w_i           = np.sqrt(np.real(eigenvals)**2 + np.imag(eigenvals)**2)
     damping_i     =  - np.real(eigenvals) / w_i
     arg_sorted    = np.argsort(w_i)
+    eigenvals     = eigenvals[arg_sorted]
     w_i           = w_i[arg_sorted]
     damping_i     = damping_i[arg_sorted]
     return w_i, damping_i, eigenvals
@@ -89,24 +91,18 @@ def get_stabilisation(dic_order):
 
                 
 def compute_lsfd(lambdak, f, H):
-    idx_f  = (f >= 0.001) 
-    f      = f[idx_f]
-    H      = H[:, 0, idx_f]
-    print("H shape: ", H.shape)
-    ni     = H.shape[0]      # number of references
-    no     = 1      # number of responses
-    n      = H.shape[1]      # length of frequency vector
+    f[0] = 10**-6    # like sart to 0, ... 
+    ni = H.shape[0]  # number of references
+    no = H.shape[1]  # number of responses
+    n  = H.shape[2]   # length of frequency vector
     nmodes = lambdak.shape[0]  # number of modes
     omega = 2 * np.pi * f  # angular frequency
-    print("Poles: ", lambdak)
-    print("Omega: ", omega)
-    
 
     # Factors in the freqeuncy response function
     b = 1 / np.subtract.outer(1j * omega, lambdak).T
     c = 1 / np.subtract.outer(1j * omega, np.conj(lambdak)).T
 
-    # Separate complex data to real and imaginary part due to the equation each real need ot be equal to each other
+    # Separate complex data to real and imaginary part
     hr = H.real
     hi = H.imag
     br = b.real
@@ -116,8 +112,8 @@ def compute_lsfd(lambdak, f, H):
 
     # Stack the data together in order to obtain 2D matrix
     hri = np.dstack((hr, hi))
-    bri = np.hstack((br+cr,  bi+ci))  # P_k(w)
-    cri = np.hstack((-bi+ci, br-cr))  # Q_k(w)
+    bri = np.hstack((br+cr, bi+ci))
+    cri = np.hstack((-bi+ci, br-cr))
 
     ur_multiplyer = np.ones(n)
     ur_zeros      = np.zeros(n)
@@ -127,37 +123,35 @@ def compute_lsfd(lambdak, f, H):
     uri = np.hstack((ur_zeros, ur_multiplyer))
     lrr = np.hstack((lr_multiplyer, ur_zeros))
     lri = np.hstack((ur_zeros, lr_multiplyer))
+
     bcri = np.vstack((bri, cri, urr, uri, lrr, lri))
+
     # Reshape 3D array to 2D for least squares coputation
     hri = hri.reshape(ni*no, 2*n)
+
     # Compute the modal constants (residuals) and upper and lower residuals
     uv = lstsq(bcri.T, hri.T)[0]
 
     # Reshape 2D results to 3D
     uv = uv.T.reshape(ni, no, 2*nmodes+4)
+
     u   = uv[:, :, :nmodes]
     v   = uv[:, :, nmodes:-4]
-    urr = uv[:, :, -4]
-    uri = uv[:, :, -3]
-    lrr = uv[:, :, -2]
-    lri = uv[:, :, -1]
 
-    a  = u + 1j*v       # Modal constant (residue)
-    ur = urr + 1j*uri  # Upper residual
-    lr = lrr + 1j*lri  # Lower residual
+    a  = u + 1j*v       
 
-    return a, lr, ur
+    return a
 
 def extract_eigenmode(A) :
     """
     Eingenmode is extract using the residue method
     """
-    n, q = A.shape # m represente the accelrometer n the number of shock and q the mode
+    n, m ,q = A.shape # m represente the accelrometer n the number of shock and q the mode
     mode    = np.zeros((n,q), dtype=complex)
     for i in range(q):
-        mode_s    = np.sqrt(A[0,i])
+        mode_s    = np.sqrt(A[0,0,i])
         mode[0,i] = mode_s
         for j in range(1,n):
-            mode[j,i] = A[j,i]/mode_s
+            mode[j,i] = A[j,0,i]/mode_s
 
     return mode

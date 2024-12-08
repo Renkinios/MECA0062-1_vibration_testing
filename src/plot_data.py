@@ -5,13 +5,13 @@ import os
 
 
 # Définition globale des paramètres de police et de taille pour tous les graphiques
-plt.rc('font', family='serif')  # Police avec empattements, comme Times
-plt.rc('text', usetex=True)  # Utiliser LaTeX pour le texte dans les figures
-plt.rcParams.update({
-    'font.size': 14,       # Taille de police générale
-    'legend.fontsize': 15, # Taille de police pour les légendes
-    'axes.labelsize': 18,  # Taille de police pour les étiquettes des axes
-})
+# plt.rc('font', family='serif')  # Police avec empattements, comme Times
+# plt.rc('text', usetex=True)  # Utiliser LaTeX pour le texte dans les figures
+# plt.rcParams.update({
+#     'font.size': 14,       # Taille de police générale
+#     'legend.fontsize': 15, # Taille de police pour les légendes
+#     'axes.labelsize': 18,  # Taille de police pour les étiquettes des axes
+# })
 
 
 def cmf_plot(freq, cmf ,set_name):
@@ -113,10 +113,10 @@ def plot_accelerometer_time(data, set_name):
     # plt.show()
     plt.close()
 
-def viz_stabilisation_diagram(dic_order, cmif, freq):
+def viz_stabilisation_diagram(dic_order, cmif, freq, plot_stabilisation_poles = True):
     fig, ax1 = plt.subplots(figsize=(10, 8))
-    ax1.set_xlabel(r"Frequency [Hz]")
-    ax1.set_ylabel(r"CMIF [-]", color='blue')
+    ax1.set_xlabel("Frequency [Hz]")
+    ax1.set_ylabel("CMIF [-]", color='blue')
     ax1.tick_params(axis='y', labelcolor='blue')
     ax1.semilogy(freq, cmif, color='blue')
 
@@ -125,7 +125,6 @@ def viz_stabilisation_diagram(dic_order, cmif, freq):
     ax2.set_ylabel("Poles [-]", color='black')
     ax2.tick_params(axis='y', labelcolor='black')
     for key in dic_order.keys():
-        print(f"Order polymax: \t {key}")
         w_i = dic_order[key]["wn"]
         stable = dic_order[key]["stable"]
         # print(stable)
@@ -137,32 +136,21 @@ def viz_stabilisation_diagram(dic_order, cmif, freq):
             elif stable[i] == 'v':
                 ax2.scatter(w/2/np.pi, key, marker = stable[i], s=10, facecolors='none',color=point_color)
             else:
-                print("stable[i]", stable[i])
                 ax2.scatter(w/2/np.pi, key, marker = stable[i], s=20, facecolors='none', color=point_color)
-                print(f"Frequency  : \t {w/2/np.pi} , \nDamping stable   \t : {dic_order[key]['zeta'][i]}")
-                print(f"Eigenvalue : \t {dic_order[key]['eigenval'][i]}")
-    selected_pole = [30,30,33,33,66,32,70,60,72,40,30,30,60]  
-    for i in range(13) :
-        ax2.scatter(dic_order[selected_pole[i]]["wn"][0]/2/np.pi , 25 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[25]["wn"][0]/2/np.pi , 25 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[33]["wn"][6]/2/np.pi , 33 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[35]["wn"][13]/2/np.pi, 35 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[35]["wn"][14]/2/np.pi, 35 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[38]["wn"][18]/2/np.pi, 38 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[93]["wn"][52]/2/np.pi, 93 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[81]["wn"][52]/2/np.pi, 81 ,color='green', facecolors='none', s=20,marker='d') 
-        # ax2.scatter(dic_order[27]["wn"][20]/2/np.pi, 27 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[91]["wn"][67]/2/np.pi, 91 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[81]["wn"][62]/2/np.pi, 81 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[37]["wn"][33]/2/np.pi, 37 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[33]["wn"][35]/2/np.pi, 33 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[41]["wn"][46]/2/np.pi, 41 ,color='green', facecolors='none', s=20,marker='d') # error ici
+    if plot_stabilisation_poles:
+        if max(dic_order.keys()) < 73 :
+            print("The model cannot caputre all the stabilization pole used")
+        else :
+            selected_pole = [30,30,33,33,55,32,40,63,55,53,30,30,37]
+            idx_freq      = [1,5 ,15, 16, 29, 19, 26, 44, 40, 41, 25, 27, 37]
+            for i in range(len(selected_pole)) :
+                ax2.scatter(dic_order[selected_pole[i]]["wn"][idx_freq[i]]/2/np.pi , selected_pole[i] ,color='green', facecolors='none', s=20,marker='d')
 
 
-    ax2.scatter(200,20, color='red',   label=r'Stabilized', facecolors='none', s=20,marker='d')
-    ax2.scatter(200,20, color='black', label=r'Unstabilized', s=20,marker='o',)
-    ax2.scatter(200,20, color='black', label=r'Stabilized in frequency (1 \%)', s=20, marker='v', facecolors='none')
-    ax2.scatter(200,20, color='green', label=r'Chossen poles', facecolors='none', s=20,marker='d')
+    ax2.scatter(200,20, color='red',   label='Stabilized', facecolors='none', s=20,marker='d')
+    ax2.scatter(200,20, color='black', label='Unstabilized', s=20,marker='o',)
+    ax2.scatter(200,20, color='black', label='Stabilized in frequency (1 \%)', s=20, marker='v', facecolors='none')
+    ax2.scatter(200,20, color='green', label='Chossen poles', facecolors='none', s=20,marker='d')
     plt.legend(loc="lower center", bbox_to_anchor=(0.5, 1.02), ncol=2)
 
     plt.xlim(13, 180)
