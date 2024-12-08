@@ -113,7 +113,7 @@ def plot_accelerometer_time(data, set_name):
     # plt.show()
     plt.close()
 
-def viz_stabilisation_diagram(dic_order, cmif, freq):
+def viz_stabilisation_diagram(dic_order, cmif, freq, plot_stabilisation_poles = True):
     fig, ax1 = plt.subplots(figsize=(10, 8))
     ax1.set_xlabel(r"Frequency [Hz]")
     ax1.set_ylabel(r"CMIF [-]", color='blue')
@@ -122,10 +122,9 @@ def viz_stabilisation_diagram(dic_order, cmif, freq):
 
     # Deuxième axe pour les stabilisations
     ax2 = ax1.twinx()
-    ax2.set_ylabel("Poles [-]", color='black')
+    ax2.set_ylabel(r"Poles [-]", color='black')
     ax2.tick_params(axis='y', labelcolor='black')
     for key in dic_order.keys():
-        print(f"Order polymax: \t {key}")
         w_i = dic_order[key]["wn"]
         stable = dic_order[key]["stable"]
         # print(stable)
@@ -137,26 +136,15 @@ def viz_stabilisation_diagram(dic_order, cmif, freq):
             elif stable[i] == 'v':
                 ax2.scatter(w/2/np.pi, key, marker = stable[i], s=10, facecolors='none',color=point_color)
             else:
-                print("stable[i]", stable[i])
                 ax2.scatter(w/2/np.pi, key, marker = stable[i], s=20, facecolors='none', color=point_color)
-                print(f"Frequency  : \t {w/2/np.pi} , \nDamping stable   \t : {dic_order[key]['zeta'][i]}")
-                print(f"Eigenvalue : \t {dic_order[key]['eigenval'][i]}")
-    selected_pole = [30,30,33,33,66,32,70,60,72,40,30,30,60]  
-    for i in range(13) :
-        ax2.scatter(dic_order[selected_pole[i]]["wn"][0]/2/np.pi , 25 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[25]["wn"][0]/2/np.pi , 25 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[33]["wn"][6]/2/np.pi , 33 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[35]["wn"][13]/2/np.pi, 35 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[35]["wn"][14]/2/np.pi, 35 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[38]["wn"][18]/2/np.pi, 38 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[93]["wn"][52]/2/np.pi, 93 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[81]["wn"][52]/2/np.pi, 81 ,color='green', facecolors='none', s=20,marker='d') 
-        # ax2.scatter(dic_order[27]["wn"][20]/2/np.pi, 27 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[91]["wn"][67]/2/np.pi, 91 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[81]["wn"][62]/2/np.pi, 81 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[37]["wn"][33]/2/np.pi, 37 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[33]["wn"][35]/2/np.pi, 33 ,color='green', facecolors='none', s=20,marker='d')
-        # ax2.scatter(dic_order[41]["wn"][46]/2/np.pi, 41 ,color='green', facecolors='none', s=20,marker='d') # error ici
+    if plot_stabilisation_poles:
+        if max(dic_order.keys()) < 73 :
+            print("The model cannot caputre all the stabilization pole used")
+        else :
+            selected_pole = [30,30,33,33,55,32,40,63,55,53,30,30,37]
+            idx_freq      = [1,5 ,15, 16, 29, 19, 26, 44, 40, 41, 25, 27, 37]
+            for i in range(len(selected_pole)) :
+                ax2.scatter(dic_order[selected_pole[i]]["wn"][idx_freq[i]]/2/np.pi , selected_pole[i] ,color='green', facecolors='none', s=20,marker='d')
 
 
     ax2.scatter(200,20, color='red',   label=r'Stabilized', facecolors='none', s=20,marker='d')
@@ -170,5 +158,48 @@ def viz_stabilisation_diagram(dic_order, cmif, freq):
     plt.show()
 
 
+def plot_structure(data_samcef):
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Plot the data points
+    ax.scatter(data_samcef['X_Coord'], data_samcef['Y_Coord'], data_samcef['Z_Coord'], c='blue', marker='o', s=10)
+
+    # Set labels and title
+    ax.set_title('3D Plot of Coordinates', fontsize=16)
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    ax.set_zlabel('Z Coordinate')
+
+    plt.show()
+
+def viz_MAC(MAC_matrix) : 
+    plt.figure(figsize=(10, 8))
+    
+    cax = plt.imshow(MAC_matrix, cmap='Greys', interpolation='none', origin='lower')
+    plt.colorbar(cax)  
+
+    max_indices = np.argmax(MAC_matrix, axis=0)
+    plt.xticks(range(MAC_matrix.shape[1]), [str(i+1) for i in range(MAC_matrix.shape[1])])
+    plt.yticks(range(MAC_matrix.shape[0]), [str(i+1) for i in range(MAC_matrix.shape[0])])
+    plt.xlabel(r"Modes Testing")
+    plt.ylabel(r"Modes Samcef")
+    
+    plt.tight_layout()
+    plt.show()
 
 
+def viz_MAC(autoMAC_matrice) : 
+    plt.figure(figsize=(10, 8))
+    
+    cax = plt.imshow(autoMAC_matrice, cmap='Greys', interpolation='none', origin='lower')
+    plt.colorbar(cax)  
+
+    max_indices = np.argmax(autoMAC_matrice, axis=0)
+    plt.xticks(range(autoMAC_matrice.shape[1]), [str(i+1) for i in range(autoMAC_matrice.shape[1])])
+    plt.yticks(range(autoMAC_matrice.shape[0]), [str(i+1) for i in range(autoMAC_matrice.shape[0])])
+    plt.xlabel(r"Modes Testing")
+    plt.ylabel(r"Modes Samcef")
+    
+    plt.tight_layout()
+    plt.show()

@@ -28,9 +28,11 @@ def get_polymax(H, freq,order_model,delta_t) :
     C             = get_C(alpha, order_model)
     eigenvals, x  = linalg.eig(C)
     eigenvals     = np.log(eigenvals) / delta_t
+
     w_i           = np.sqrt(np.real(eigenvals)**2 + np.imag(eigenvals)**2)
     damping_i     =  - np.real(eigenvals) / w_i
     arg_sorted    = np.argsort(w_i)
+    eigenvals     = eigenvals[arg_sorted]
     w_i           = w_i[arg_sorted]
     damping_i     = damping_i[arg_sorted]
     return w_i, damping_i, eigenvals
@@ -135,29 +137,21 @@ def compute_lsfd(lambdak, f, H):
 
     u   = uv[:, :, :nmodes]
     v   = uv[:, :, nmodes:-4]
-    urr = uv[:, :, -4]
-    uri = uv[:, :, -3]
-    lrr = uv[:, :, -2]
-    lri = uv[:, :, -1]
 
-    a = u + 1j*v       
-    ur = urr + 1j*uri  
-    lr = lrr + 1j*lri  
+    a  = u + 1j*v       
 
     return a
-
-
 
 def extract_eigenmode(A) :
     """
     Eingenmode is extract using the residue method
     """
     n, m ,q = A.shape # m represente the accelrometer n the number of shock and q the mode
-    mode    = np.zeros((n,q), dtype=complex)
+    mode    = np.zeros((q, n), dtype=complex)
     for i in range(q):
         mode_s    = np.sqrt(A[0,0,i])
-        mode[0,i] = mode_s
+        mode[i, 0] = mode_s
         for j in range(1,n):
-            mode[j,i] = A[j,0,i]/mode_s
+            mode[i, j] = A[j,0,i]/mode_s
 
     return mode
