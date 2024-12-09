@@ -101,7 +101,7 @@ class DetailedAnalysis:
         freq = np.abs(eig_syst[sorted_indices]) / (2 * np.pi)
         damp = -np.real(eig_syst[sorted_indices]) / freq / (2 * np.pi)
 
-        return freq,damp,eiv
+        return freq,damp,eig_syst
     
     def pullDoublet(self, freq, damp):
         freq_simplified = []
@@ -153,6 +153,9 @@ class DetailedAnalysis:
 
             self.q = np.arange(0, order + 1, 1)  
             freq, damp, eiv = self.PolyMAX()  
+            print(f"freq: {freq}")
+            print(f"damp: {damp}")
+            print(f"eiv: {eiv}")
             freq,damp = self.pullDoublet(freq,damp)
             freq, damp = self.CutVector(freq, damp)
 
@@ -182,7 +185,7 @@ class DetailedAnalysis:
 
                         if np.abs(freq_error) < self.error_freq:
                             if np.abs(damp_error) < self.error_damp:
-                                print(f'f: {f},damp: {damp[i]}')
+                                # print(f'f: {f},damp: {damp[i]}')
                                 self.eigenfreq.append(f)
                                 #if order%2 == 0:
                                 scatter = plt.scatter(f, order, s=3, marker = '^', color = 'b', linewidths=0.5)#, zorder=3)
@@ -268,14 +271,19 @@ class DetailedAnalysis:
         #     damping.append(damp[idx])
         # print("Poles",pole)
         # print("Damping",damping)
-        pole = [(-0.41919674864349765-118.39096931287311j), (-1.0031165201872752-252.09465482162784j)]
+        pole = np.array([
+    -0.41919761 - 118.39096967j, -1.00311684 - 252.09465319j,
+    -2.95548289 + 551.98759087j, -1.9042592 + 563.35606549j,
+    -0.63729897 - 610.02198244j, -0.31541393 + 660.9890016j,
+    -6.21792925 - 741.42633958j, -2.01626186 + 786.73010206j,
+    -2.85199809 + 789.49204795j, -5.103421 - 817.43014699j,
+    -9.25476512 - 849.80643652j, -5.9185963 - 900.81266308j,
+    -1.45473844 + 1044.76438362j
+])
 
 
         omega = self.freq * 2 * np.pi
         modes = []
-        print("self.FRF_matrix[0,:]",self.FRF_matrix[0,:])
-        print("self.FRF_matrix",self.FRF_matrix.shape)
-
         for i in range(len(self.FRF_matrix[0,:])):
             b = self.FRF_matrix[0,i,:]
             A = []
@@ -302,9 +310,7 @@ class DetailedAnalysis:
             x = x[1:-1]
             residue  = x[::2] + 1j * x[1::2]
             modes.append(residue)
-        print("shape A", A.shape)
         print("Mode shape", np.array(modes).shape)
-        print("Mode shape", np.array(modes))
         return modes
 
     def computeRealEigenmodes(self,modeshape):
@@ -393,8 +399,8 @@ class DetailedAnalysis:
 
 def main():
     da = DetailedAnalysis(pmin = 20, pmax = 25, step = 1)
-    # da.StabilisationDiag(20,30,1)
-    da.getEigenFreq()
+    # da.StabilisationDiag(29,30,1)
+    # da.getEigenFreq()
     modes = da.getModeShapes()
 
 if __name__ == "__main__":

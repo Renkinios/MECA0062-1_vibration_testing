@@ -147,11 +147,11 @@ def extract_eigenmode(A) :
     Eingenmode is extract using the residue method
     """
     n, m ,q = A.shape # m represente the accelrometer n the number of shock and q the mode
-    mode    = np.zeros((n,q), dtype=complex)
+    mode    = np.zeros((q, n), dtype=complex)
     for i in range(q):
         mode_s    = np.sqrt(A[0,0,i])
-        mode[0,i] = mode_s
+        mode[i, 0] = mode_s
         for j in range(1,n):
-            mode[j,i] = A[j,0,i]/mode_s
+            mode[i, j] = A[j,0,i]/mode_s
 
     return mode

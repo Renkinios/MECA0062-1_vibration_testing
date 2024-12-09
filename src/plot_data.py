@@ -5,25 +5,52 @@ import os
 
 
 # Définition globale des paramètres de police et de taille pour tous les graphiques
-# plt.rc('font', family='serif')  # Police avec empattements, comme Times
-# plt.rc('text', usetex=True)  # Utiliser LaTeX pour le texte dans les figures
-# plt.rcParams.update({
-#     'font.size': 14,       # Taille de police générale
-#     'legend.fontsize': 15, # Taille de police pour les légendes
-#     'axes.labelsize': 18,  # Taille de police pour les étiquettes des axes
-# })
+plt.rc('font', family='serif')  # Police avec empattements, comme Times
+plt.rc('text', usetex=True)  # Utiliser LaTeX pour le texte dans les figures
+plt.rcParams.update({
+    'font.size': 14,       # Taille de police générale
+    'legend.fontsize': 15, # Taille de police pour les légendes
+    'axes.labelsize': 18,  # Taille de police pour les étiquettes des axes
+})
 
 
-def cmf_plot(freq, cmf ,set_name):
+def cmf_plot(freq, cmf, set_name):
     save_dir = f"../figures/first_lab/{set_name}"
     save_path = f"{save_dir}/CMIF.pdf"
-    plt.figure(figsize=(10, 4))
-    plt.semilogy(freq, cmf)
-    plt.xlabel(r"Frequency [Hz]")
-    plt.ylabel(r"CMIF [-]")
-    # plt.grid(True)
-    plt.savefig(save_path, format="pdf", dpi=300, bbox_inches='tight')
     
+    # Configuration de la figure
+    plt.figure(figsize=(10, 4))
+    plt.semilogy(freq, cmf)  # Courbe principale
+    
+    points = [
+        (18.83, 18.17),
+        (40.23, 29.56),
+        (87.97, 4.24),
+        (89.69, 28.98),
+        (97.23, 13.89),
+        (105.21, 12.77),
+        (118, 0.32),
+        (124.34, 0.24),
+        (125.61, 0.92),
+        (129.88, 2.06),
+        (134.93, 0.2),
+        (143.08, 0.084),
+        (166.37, 0.0067)
+    ]
+
+    # Couleur bordeaux et taille réduite
+    bordeaux_color = "#800020"  # Code hexadécimal pour la couleur bordeaux
+    point_size = 10  # Taille des points (plus petit)
+
+    # Ajout des points au-dessus de la courbe
+    for x, y in points:
+        plt.scatter(x, y, color=bordeaux_color, s=point_size, zorder=3)  # zorder met les points devant
+
+    # Ajout des labels et sauvegarde
+    plt.xlabel(r"Frequency [Hz]")
+    plt.ylabel(r"CMIF [-]")    
+    # Uncomment to save the plot
+    plt.savefig(save_path, format="pdf", dpi=300, bbox_inches='tight')
     plt.close()
 
 def bode_plot(data, set_name):
@@ -41,12 +68,12 @@ def bode_plot(data, set_name):
     H1_4 = data["H1_4"][:, 1]
 
     plt.figure(figsize=(10, 4))
-    plt.semilogy(freq, np.abs(H1_2), label="H1_2")
-    plt.semilogy(freq, np.abs(H1_3), label="H1_3")
-    plt.semilogy(freq, np.abs(H1_4), label="H1_4")
+    plt.semilogy(freq, np.abs(H1_2), label=r"Wing ")
+    plt.semilogy(freq, np.abs(H1_3), label=r"Horizontal Tail")
+    plt.semilogy(freq, np.abs(H1_4), label=r"Vertical Tail")
     plt.xlabel(r"Frequency [Hz]")
-    plt.ylabel(r"Amplitude dBMag [g/N]")
-    plt.legend()
+    plt.ylabel(r"Amplitude [g/N] (dB)")
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3)
     plt.tight_layout()
     
     plt.savefig(save_path, format="pdf", dpi=300, bbox_inches='tight')
@@ -67,11 +94,12 @@ def coherence_plot(data, set_name):
     C1_4 = data["C1_4"][:, 1]
 
     plt.figure(figsize=(10, 4))
-    plt.plot(freq, C1_2, label="C1_2")
-    plt.plot(freq, C1_3, label="C1_3")
-    plt.plot(freq, C1_4, label="C1_4")
+    plt.plot(freq, C1_2, label=r"Wing")
+    plt.plot(freq, C1_3, label=r"Horizontal Tail ")
+    plt.plot(freq, C1_4, label=r"Vertical Tail")
     plt.xlabel(r"Frequency [Hz]")
     plt.ylabel(r"Magnitude [-]")
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=3)
     # plt.legend(loc ="upper right")
     plt.tight_layout()
     plt.savefig(save_path, format="pdf", dpi=300, bbox_inches='tight')
@@ -82,9 +110,10 @@ def plot_exitasion_shock(data, set_name) :
     amplitude = data["G1_1"][:, 1]
     plt.figure(figsize=(10,6))
     plt.plot(freq, amplitude)
-    plt.xlabel(r"Frequency [Hz]", fontsize=18)
-    plt.ylabel(r"Amplitude [N]", fontsize=18)
+    plt.xlabel(r"Frequency [Hz]")
+    plt.ylabel(r"Amplitude [N]")
     plt.savefig(f"../figures/first_lab/{set_name}/exitasion_shock.pdf", format="pdf", dpi=300, bbox_inches='tight')
+    # plt.show()
     plt.close()
 
 def plot_time_shock(data, set_name):
@@ -95,8 +124,8 @@ def plot_time_shock(data, set_name):
     time = time[arg] * 100
     plt.figure(figsize=(10, 6))  # Augmenter la taille de la figure
     plt.plot(time, amplitude)
-    plt.xlabel(r"Time [ms]", fontsize=18)  # Taille des labels encore plus grande
-    plt.ylabel(r"Amplitude [N]", fontsize=18)
+    plt.xlabel(r"Time [ms]")  # Taille des labels encore plus grande
+    plt.ylabel(r"Amplitude [N]")
     plt.savefig(f"../figures/first_lab/{set_name}/time_shock.pdf", format="pdf", dpi=300, bbox_inches='tight')
     # plt.show()
     plt.close()
@@ -106,8 +135,8 @@ def plot_accelerometer_time(data, set_name):
     amplitude = data["X2"][:, 1]
     plt.figure(figsize=(10, 9))  # Augmenter la taille de la figure
     plt.plot(time, amplitude)
-    plt.xlabel(r"Time [s]", fontsize=18)  # Taille des labels encore plus grande
-    plt.ylabel(r"Amplitude [g]", fontsize=18)
+    plt.xlabel(r"Time [s]")  # Taille des labels encore plus grande
+    plt.ylabel(r"Amplitude [g]")
 
     plt.savefig(f"../figures/first_lab/{set_name}/time_accelerometer.pdf", format="pdf", dpi=300, bbox_inches='tight')
     # plt.show()
@@ -115,14 +144,14 @@ def plot_accelerometer_time(data, set_name):
 
 def viz_stabilisation_diagram(dic_order, cmif, freq, plot_stabilisation_poles = True):
     fig, ax1 = plt.subplots(figsize=(10, 8))
-    ax1.set_xlabel("Frequency [Hz]")
-    ax1.set_ylabel("CMIF [-]", color='blue')
+    ax1.set_xlabel(r"Frequency [Hz]")
+    ax1.set_ylabel(r"CMIF [-]", color='blue')
     ax1.tick_params(axis='y', labelcolor='blue')
     ax1.semilogy(freq, cmif, color='blue')
 
     # Deuxième axe pour les stabilisations
     ax2 = ax1.twinx()
-    ax2.set_ylabel("Poles [-]", color='black')
+    ax2.set_ylabel(r"Poles [-]", color='black')
     ax2.tick_params(axis='y', labelcolor='black')
     for key in dic_order.keys():
         w_i = dic_order[key]["wn"]
@@ -147,10 +176,10 @@ def viz_stabilisation_diagram(dic_order, cmif, freq, plot_stabilisation_poles = 
                 ax2.scatter(dic_order[selected_pole[i]]["wn"][idx_freq[i]]/2/np.pi , selected_pole[i] ,color='green', facecolors='none', s=20,marker='d')
 
 
-    ax2.scatter(200,20, color='red',   label='Stabilized', facecolors='none', s=20,marker='d')
-    ax2.scatter(200,20, color='black', label='Unstabilized', s=20,marker='o',)
-    ax2.scatter(200,20, color='black', label='Stabilized in frequency (1 \%)', s=20, marker='v', facecolors='none')
-    ax2.scatter(200,20, color='green', label='Chossen poles', facecolors='none', s=20,marker='d')
+    ax2.scatter(200,20, color='red',   label=r'Stabilized', facecolors='none', s=20,marker='d')
+    ax2.scatter(200,20, color='black', label=r'Unstabilized', s=20,marker='o',)
+    ax2.scatter(200,20, color='black', label=r'Stabilized in frequency (1 \%)', s=20, marker='v', facecolors='none')
+    ax2.scatter(200,20, color='green', label=r'Chossen poles', facecolors='none', s=20,marker='d')
     plt.legend(loc="lower center", bbox_to_anchor=(0.5, 1.02), ncol=2)
 
     plt.xlim(13, 180)
@@ -158,5 +187,52 @@ def viz_stabilisation_diagram(dic_order, cmif, freq, plot_stabilisation_poles = 
     plt.show()
 
 
+def plot_structure(data_samcef):
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
 
+    # Plot the data points
+    ax.scatter(data_samcef['X_Coord'], data_samcef['Y_Coord'], data_samcef['Z_Coord'], c='blue', marker='o', s=10)
+
+    # Set labels and title
+    ax.set_title('3D Plot of Coordinates', fontsize=16)
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    ax.set_zlabel('Z Coordinate')
+
+    plt.show()
+    plt.close()
+
+def viz_MAC(MAC_matrix) : 
+    plt.figure(figsize=(10, 8))
+    
+    cax = plt.imshow(MAC_matrix, cmap='Greys', interpolation='none', origin='lower')
+    plt.colorbar(cax)  
+
+    max_indices = np.argmax(MAC_matrix, axis=0)
+    plt.xticks(range(MAC_matrix.shape[1]), [str(i+1) for i in range(MAC_matrix.shape[1])])
+    plt.yticks(range(MAC_matrix.shape[0]), [str(i+1) for i in range(MAC_matrix.shape[0])])
+    plt.xlabel(r"Modes Testing")
+    plt.ylabel(r"Modes Samcef")
+    
+    plt.tight_layout()
+    plt.show()
+    plt.close()
+
+
+def viz_MAC_auto(autoMAC_matrice) : 
+    plt.figure(figsize=(10, 8))
+    
+    cax = plt.imshow(autoMAC_matrice, cmap='Greys', interpolation='none', origin='lower')
+    plt.colorbar(cax)  
+
+    max_indices = np.argmax(autoMAC_matrice, axis=0)
+    plt.xticks(range(autoMAC_matrice.shape[1]), [str(i+1) for i in range(autoMAC_matrice.shape[1])])
+    plt.yticks(range(autoMAC_matrice.shape[0]), [str(i+1) for i in range(autoMAC_matrice.shape[0])])
+    plt.xlabel(r"Modes Testing")
+    plt.ylabel(r"Modes Samcef")
+    
+    plt.tight_layout()
+    plt.show()
+    plt.close()
 

@@ -4,7 +4,8 @@ import extract_data as ed
 import numpy as np
 
 def representation_mode(real_mode, nbr = 1, amplifactor =20):
-    nodes = ed.extract_node_shock()
+    nodes = ed.extract_node_shock("../data/node_structure.csv")
+    nodes = nodes.to_numpy()
     def generate_elements(start, end, step, offset):
         return [[i, i + offset] for i in range(start, end, step)]
     elements = []
@@ -32,28 +33,6 @@ def representation_mode(real_mode, nbr = 1, amplifactor =20):
     elements.extend(generate_elements(76, 82, 2, 2))
     elements.extend(generate_elements(77, 83, 2, 2))
     elements.extend(generate_elements(76, 83, 2, 1))
-    '''
-    # Wing right
-    elements.extend(generate_elements(0, 14, 2, 2))
-    elements.extend(generate_elements(1, 15, 2, 2))
-    elements.extend(generate_elements(0, 15, 2, 1))
-    # Wing left
-    elements.extend(generate_elements(16, 30, 2, 2))
-    elements.extend(generate_elements(17, 31, 2, 2))
-    elements.extend(generate_elements(16, 31, 2, 1))
-    # # Tail horizontaux right
-    elements.extend(generate_elements(32, 38, 2, 2))
-    elements.extend(generate_elements(33, 39, 2, 2))
-    elements.extend(generate_elements(32, 39, 2, 1))
-    # # Tail horizontaux left
-    elements.extend(generate_elements(40, 46, 2, 2))
-    elements.extend(generate_elements(41, 47, 2, 2))
-    elements.extend(generate_elements(40, 47, 2, 1))
-    # # # Verical tail
-    elements.extend(generate_elements(48, 54, 2, 2))
-    elements.extend(generate_elements(49, 55, 2, 2))
-    elements.extend(generate_elements(48, 55, 2, 1))
-    '''
 
     # Création du graphique 3D
     fig = plt.figure(figsize=(10, 8))
@@ -69,38 +48,14 @@ def representation_mode(real_mode, nbr = 1, amplifactor =20):
 
     real_node = nodes.astype(float)
 
-    # real_node[0,2]      -= real_mode[0]*20
-    # real_node[1:14 ,2]  += real_mode[1:14]*20
-    # real_node[16:30,2]  += real_mode[14:28]*20
-    # real_node[32:38,2]  += real_mode[28:34]*20
-    # real_node[40:46,2]  += real_mode[34:40]*20
-    # real_node[48:54,0]  -= real_mode[40:46]*20
-    max_real = np.max(real_mode)
+    max_real             = np.max(real_mode)
     real_node[0,2]      += real_mode[0]    *amplifactor/max_real
-    real_node[1:28 ,2]  -= real_mode[1:28] *amplifactor/max_real
-    real_node[30:58,2]  -= real_mode[28:56]*amplifactor/max_real
-    real_node[60:66,2]  -= real_mode[56:62]*amplifactor/max_real
+    real_node[1:28 ,2]  += real_mode[1:28] *amplifactor/max_real
+    real_node[30:58,2]  += real_mode[28:56]*amplifactor/max_real
+    real_node[60:66,2]  += real_mode[56:62]*amplifactor/max_real
     real_node[68:74,2]  += real_mode[62:68]*amplifactor/max_real
     real_node[76:82,0]  += real_mode[68:74]*amplifactor/max_real
 
-    # real_node[0,2]      += real_mode[0]    *amplifactor/max_real
-    # real_node[1:14 ,2]  -= real_mode[1:14] *amplifactor/max_real
-
-
-    # real_node[15:28 ,2] -= real_mode[14:27] *amplifactor/max_real
-    # real_node[30:58,2]  -= real_mode[27:55]*amplifactor/max_real
-    # real_node[60:66,2]  += real_mode[55:61]*amplifactor/max_real
-    # real_node[68:74,2]  += real_mode[61:67]*amplifactor/max_real
-    # real_node[76:82,0]  += real_mode[67:73]*amplifactor/max_real
-
-    # test_x = np.zeros(real_mode.shape[0])
-    # test_x[0]      -= real_mode[0]    *amplifactor
-    # test_x[1 :28]  += real_mode[1 :28] *amplifactor
-    # test_x[28:56]  += real_mode[28:56]*amplifactor
-    # test_x[56:62]  += real_mode[56:62]*amplifactor
-    # test_x[62:68]  += real_mode[62:68]*amplifactor
-    # test_x[68:74]  -= real_mode[68:74]*amplifactor
-    # print("test_x",test_x)
     
 
 
@@ -111,30 +66,13 @@ def representation_mode(real_mode, nbr = 1, amplifactor =20):
         y_coords = [real_node[node1][1], real_node[node2][1]]
         z_coords = [real_node[node1][2], real_node[node2][2]]
         ax.plot(x_coords, y_coords, z_coords, c='red')
+    ax.set_axis_off()  # Supprime les axes
+    fig.patch.set_facecolor('white')  # Assure un fond blanc pour la figure
 
     ax.scatter(real_node[:, 0], real_node[:, 1], real_node[:, 2], c='red')
-    # Ailes
-    # ax.scatter(real_node[:14, 0], real_node[:14, 1], real_node[:14, 2], c='red')
-    # ax.scatter(real_node[14:28, 0], real_node[14:28, 1], real_node[14:28, 2], c='red')
-
-    # # Stabilisateurs horizontaux
-    # ax.scatter(real_node[28:34, 0], real_node[28:34,1], real_node[28:34,2], c='red')
-    # ax.scatter(real_node[34:40, 0], real_node[34:40, 1], real_node[34:40, 2], c='red')
-
-    # # Stabilisateur vertical
-    # ax.scatter(real_node[40:, 0], real_node[40:, 1], real_node[40:, 2], c='red')
     ax.scatter(nodes[:, 0], nodes[:, 1], nodes[:,2], c='black')
 
-
-
-    # Légendes et labels
-    ax.set_title(f"3D Plot of Wing and Tail Nodes {nbr}", fontsize=14)
-    ax.set_xlabel("X-axis (mm)")
-    ax.set_ylabel("Y-axis (mm)")
-    ax.set_zlabel("Z-axis (mm)")
-    # ax.legend()
-    file_name = f"../figures/sec_lab/mode_test/mode_{nbr}.pdf"
-    # plt.savefig (file_name, dpi=300,bbox_inches='tight')
-    plt.show()
-
-# representation_mode(0)
+    file_name = f"../figures/sec_lab/mode/mode_{nbr}.pdf"
+    plt.savefig (file_name, dpi=300,bbox_inches='tight')
+    plt.close()
+    # plt.show()
