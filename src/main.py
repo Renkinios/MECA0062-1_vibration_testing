@@ -49,19 +49,12 @@ pld.cmf_plot(data["G1_1"][:, 0], cmif,name_set)
 # # part 2 
 
 # # Create the arrays based on the user's specifications
-# array1       = np.arange(1, 29) 
-# array2       = np.arange(31, 59) 
-# array3       = np.arange(61, 79)  
-# result_array = np.concatenate((array1, array2, array3))
+array1       = np.arange(1, 29) 
+array2       = np.arange(31, 59) 
+array3       = np.arange(61, 79)  
+result_array = np.concatenate((array1, array2, array3))
 
-# # array1       = np.arange(1, 14) 
-# # array2       = np.arange(15, 29) 
-
-# # array3       = np.arange(31, 59) 
-# # array4       = np.arange(61, 79)  
-# # result_array = np.concatenate((array1, array2, array3, array4))
-
-# H, freq = ed.extract_H_general(result_array)
+H, freq = ed.extract_H_general(result_array)
 # delta_t = 1.9531 * 10**(-3) 
 # modal   = {}
 
@@ -121,56 +114,51 @@ pld.cmf_plot(data["G1_1"][:, 0], cmif,name_set)
 # # print("idx_freq",idx_freq)
 
 
-# # final_omega_hz = np.array([
-# #     18.84262616, 40.12242782, 87.85281287, 89.66141477, 143.33713324,
-# #     105.19967891, 135.26689864, 125.57281791, 166.10382907, 135.28144599,
-# #     135.2589153, 143.37188261, 169.56553806
-# # ])
 
-# lambda_pole = np.array([
-#     -0.41919761 - 118.39096967j, -1.00311684 - 252.09465319j,
-#     -2.95548289 + 551.98759087j, -1.9042592 + 563.35606549j,
-#     -0.63729897 - 610.02198244j, -0.31541393 + 660.9890016j,
-#     -6.21792925 - 741.42633958j, -2.01626186 + 786.73010206j,
-#     -2.85199809 + 789.49204795j, -5.103421 - 817.43014699j,
-#     -9.25476512 - 849.80643652j, -5.9185963 - 900.81266308j,
-#     -1.45473844 + 1044.76438362j
-# ])
+lambda_pole = np.array([
+    -0.41919761 - 118.39096967j, -1.00311684 - 252.09465319j,
+    -2.95548289 + 551.98759087j, -1.9042592 + 563.35606549j,
+    -0.63729897 - 610.02198244j, -0.31541393 + 660.9890016j,
+    -6.21792925 - 741.42633958j, -2.01626186 + 786.73010206j,
+    -2.85199809 + 789.49204795j, -5.103421 - 817.43014699j,
+    -9.25476512 - 849.80643652j, -5.9185963 - 900.81266308j,
+    -1.45473844 + 1044.76438362j
+])
 
         
 
 
-# a = pm.compute_lsfd(lambda_pole, freq, H)
+a = pm.compute_lsfd(lambda_pole, freq, H)
 
-# mode      = pm.extract_eigenmode(a)
-# # print(mode)
-# abs_mode  = np.abs(mode)
-# sign      = np.sign(np.cos(np.angle(mode)))
-# real_mode = abs_mode * sign
+mode      = pm.extract_eigenmode(a)
+# print(mode)
+abs_mode  = np.abs(mode)
+sign      = np.sign(np.cos(np.angle(mode)))
+real_mode = abs_mode * sign
 
-# for i in range(real_mode.shape[0]):
-#     real_mode[i] = real_mode[i] / np.max(np.abs(real_mode[i]))
-#     real_mode[i,0]    *= 1
-#     real_mode[i,1:28] *=-1
-#     real_mode[i,28:56]*=-1
-#     real_mode[i,56:62]*= 1
-#     real_mode[i,62:68]*= 1
-#     real_mode[i,68:74]*=-1
+for i in range(real_mode.shape[0]):
+    real_mode[i] = real_mode[i] / np.max(np.abs(real_mode[i]))
+    real_mode[i,0]    *= 1
+    real_mode[i,1:28] *=-1
+    real_mode[i,28:56]*=-1
+    real_mode[i,56:62]*= 1
+    real_mode[i,62:68]*= 1
+    real_mode[i,68:74]*=-1
 
-# # # print(mode.shape)
-# # for i in range(real_mode.shape[1]):
-# #     mode_pole = real_mode[i]
-# #     print("mode_pole", mode_pole.shape)
-# #     rm.representation_mode(mode_pole,nbr = i, amplifactor=50)
+# # print(mode.shape)
+# for i in range(real_mode.shape[1]):
+#     mode_pole = real_mode[i]
+#     print("mode_pole", mode_pole.shape)
+#     rm.representation_mode(mode_pole,nbr = i, amplifactor=50)
 
-# for i in range(real_mode.shape[0]):
-#     rm.representation_mode(real_mode[i],nbr = i, amplifactor=50)
+for i in range(real_mode.shape[0]):
+    rm.representation_mode(real_mode[i],nbr = i, amplifactor=50)
 
-# mode_samcef = ed.extract_samcef_shock()
-# MAC         = cm.get_modal_assurance_criterion(mode_samcef, real_mode)
-# auto_MAC    = cm.get_autoMAC(real_mode)
-# pld.viz_MAC(MAC)
-# pld.viz_auto_MAC(auto_MAC)
+mode_samcef = ed.extract_samcef_shock()
+MAC         = cm.get_modal_assurance_criterion(mode_samcef, real_mode)
+auto_MAC    = cm.get_autoMAC(real_mode)
+pld.viz_MAC(MAC)
+pld.viz_MAC_auto(auto_MAC)
 
 
 

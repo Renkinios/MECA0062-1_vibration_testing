@@ -45,7 +45,6 @@ def extract_mode_samcef(Path):
     cleaned_data["X_Coord"] = cleaned_data["X_Coord"].astype(int)
     cleaned_data["Y_Coord"] = cleaned_data["Y_Coord"].astype(int)
     cleaned_data["Z_Coord"] = cleaned_data["Z_Coord"].astype(int)
-    
     return cleaned_data
 
 
@@ -89,7 +88,10 @@ def plot_structure(data_samcef):
     ax.set_ylabel('Y Coordinate')
     ax.set_zlabel('Z Coordinate')
     plt.show()
-
+# for i in range(13) : # like 13 mode
+#     path_samcef = f"../data/mode_samcef/mode_{i+1}.csv" 
+#     samcef = extract_mode_samcef(path_samcef)
+#     plot_structure(samcef)
 
 
 
