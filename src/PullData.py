@@ -70,7 +70,7 @@ def extract_samcef_shock():
         path_samcef = f"../data/mode_samcef/mode_{i+1}.csv" 
         samcef = extract_mode_samcef(path_samcef)
         ordered_filtered_samcef = nodes.merge(samcef, how="left", on=["X_Coord", "Y_Coord", "Z_Coord"])
-        data_mode_samcef[i] =  ordered_filtered_samcef['Z_Data'].iloc[:63].tolist() + ordered_filtered_samcef['X_Data'].iloc[63:].tolist()
+        data_mode_samcef[i] =  ordered_filtered_samcef['Z_Data'].iloc[:68].tolist() + ordered_filtered_samcef['X_Data'].iloc[68:].tolist()
         data_mode_samcef[i] = np.array(data_mode_samcef[i])/np.max(np.abs(data_mode_samcef[i]))
     return np.array(data_mode_samcef)
 
@@ -88,6 +88,8 @@ def plot_structure(data_samcef):
     ax.set_ylabel('Y Coordinate')
     ax.set_zlabel('Z Coordinate')
     plt.show()
+
+
 # for i in range(13) : # like 13 mode
 #     path_samcef = f"../data/mode_samcef/mode_{i+1}.csv" 
 #     samcef = extract_mode_samcef(path_samcef)

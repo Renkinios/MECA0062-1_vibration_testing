@@ -1,5 +1,5 @@
 import numpy as np
-import extract_data as ed
+import PullData as ed
 from scipy import linalg
 from scipy.linalg import lstsq
 
@@ -13,7 +13,7 @@ def get_polymax(H, freq,order_model,delta_t) :
             for m in range(order_model + 1) :
                 weigt_fct = 1
                 X_l[n][m] = weigt_fct * (np.exp(1j * 2 * np.pi * freq[n] * m * delta_t))
-            Y_l.append(np.kron( - X_l[n], H_line_freq))
+            Y_l.append(np.Mron( - X_l[n], H_line_freq))
         Y_l  = np.array(Y_l)
         Xl_H = np.conjugate(X_l).T
         Yl_H = np.conjugate(Y_l).T
@@ -92,17 +92,16 @@ def get_stabilisation(dic_order):
                 
 def compute_lsfd(lambdak, f, H):
     f[0] = 10**-6    # like sart to 0, ... 
-    ni = H.shape[0]  # number of references
-    no = H.shape[1]  # number of responses
-    n  = H.shape[2]   # length of frequency vector
-    nmodes = lambdak.shape[0]  # number of modes
-    omega = 2 * np.pi * f  # angular frequency
+    ni = H.shape[0]  
+    no = H.shape[1]  
+    n  = H.shape[2]   
+    nmodes = lambdak.shape[0]  
+    omega = 2 * np.pi * f 
 
-    # Factors in the freqeuncy response function
+    # Extract like p_k and q_k
     b = 1 / np.subtract.outer(1j * omega, lambdak).T
     c = 1 / np.subtract.outer(1j * omega, np.conj(lambdak)).T
 
-    # Separate complex data to real and imaginary part
     hr = H.real
     hi = H.imag
     br = b.real
@@ -110,29 +109,25 @@ def compute_lsfd(lambdak, f, H):
     cr = c.real
     ci = c.imag
 
-    # Stack the data together in order to obtain 2D matrix
     hri = np.dstack((hr, hi))
     bri = np.hstack((br+cr, bi+ci))
     cri = np.hstack((-bi+ci, br-cr))
 
-    ur_multiplyer = np.ones(n)
+    Kr = np.ones(n)
     ur_zeros      = np.zeros(n)
-    lr_multiplyer = -1/(omega**2)
+    Mr = -1/(omega**2)
 
-    urr = np.hstack((ur_multiplyer, ur_zeros))
-    uri = np.hstack((ur_zeros, ur_multiplyer))
-    lrr = np.hstack((lr_multiplyer, ur_zeros))
-    lri = np.hstack((ur_zeros, lr_multiplyer))
+    Krr = np.hstack((Kr, ur_zeros))
+    Kri = np.hstack((ur_zeros, Kr))
+    Mrr = np.hstack((Mr, ur_zeros))
+    Mri = np.hstack((ur_zeros, Mr))
 
-    bcri = np.vstack((bri, cri, urr, uri, lrr, lri))
+    A = np.vstack((bri, cri, Krr, Kri, Mrr, Mri))
 
-    # Reshape 3D array to 2D for least squares coputation
     hri = hri.reshape(ni*no, 2*n)
 
-    # Compute the modal constants (residuals) and upper and lower residuals
-    uv = lstsq(bcri.T, hri.T)[0]
-
-    # Reshape 2D results to 3D
+    uv = lstsq(A.T, hri.T)[0]
+    
     uv = uv.T.reshape(ni, no, 2*nmodes+4)
 
     u   = uv[:, :, :nmodes]

@@ -1,8 +1,8 @@
-import extract_data as ed
-import plot_data as pld
-import first_data_fct as fdf
+import PullData as pld
+import VizData as vd
+import SDOF_modal_anlysis as sdf
 import interpolate_data as idf
-import representation_mode as rm
+import VizMode as vm
 import comparaison_method as cm
 import polymax as pm
 from scipy.signal import find_peaks
@@ -10,158 +10,138 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from tqdm import tqdm 
+import argparse
 
-
-
-number_data = 1
+number_data     = 1
 number_data_set = str(number_data).zfill(5)
 name_data       = f"../data/first_lab/DPsv{number_data_set}.mat"
-name_set = f"set_{number_data}"
-data = ed.extract_data(name_data)
-pld.bode_plot(data,name_set)
-pld.coherence_plot(data,name_set)
-# pld.plot_exitasion_shock(data,name_set)
-# pld.plot_time_shock(data,name_set)
-# pld.plot_accelerometer_time(data,name_set)
-cmif = fdf.compute_cmif(data)
-pld.cmf_plot(data["G1_1"][:, 0], cmif,name_set)
+name_set        = f"set_{number_data}"
 
-# freq_cmif = np.real(data["H1_2"][:, 0])
+data      = pld.extract_data(name_data)
+cmif      = sdf.compute_cmif(data)
+freq_cmif = np.real(data["H1_2"][:, 0])
 
-# # mask = (freq >= 18.4) & (freq <= 19.4)
-# # # mask =(freq >= 15) & (freq <= 25)
-# # freq_first_mode = freq[mask]
-# # H1_2 = data["H1_2"][:, 1]
-# # H1_2_first_mode = H1_2[mask]
-# # cmif_first_mode = cmif[mask]
+def experimental_modal_analys() :
+    print("Experimental modal analysis is running")
 
-# # # H1_2_first_mode_abs = np.abs(H1_2_first_mode)
+    vd.bode_plot(data,name_set)
+    vd.coherence_plot(data,name_set)
+    vd.plot_exitasion_shock(data,name_set)
+    vd.plot_time_shock(data,name_set)
+    vd.plot_accelerometer_time(data,name_set)
+    vd.cmf_plot(freq_cmif, cmif,name_set)
+
+    freq_first_lab  = np.real(data["H1_2"][:, 0])
+    mask            = (freq_first_lab >= 18.4) & (freq_first_lab <= 19.4)
+    freq_first_mode = freq_first_lab[mask]
+    H1_2            = data["H1_2"][:, 1]
+    H1_2_first_mode = H1_2[mask]
+    cmif_first_mode = cmif[mask]
+
+    H1_2_first_mode_abs = np.abs(H1_2_first_mode)
 
 
-# # lin_freq, lin_H  = idf.compute_linear_interp(freq_first_mode, cmif_first_mode, 1000)
-# # # cub_freq, cub_H  = idf.compute_cubic_spline(freq_first_mode, cmif_first_mode, 1000)
+    lin_freq, lin_H  = idf.compute_linear_interp(freq_first_mode, H1_2_first_mode_abs, 1000)
 
-# # # damping_peak_picking_method = fdf.compute_peak_picking_method(lin_H, lin_freq, plot=True, set_name=name_set)
-# # # print(f"Damping factor for pick picking method cubic: {damping_peak_picking_method}")
-# # damping_circle_fit_method = fdf.compute_circle_fit_method(freq_first_mode, H1_2_first_mode, plot=True, set_name=name_set)
-# # # print(f"Damping factor for circle fit method: {damping_circle_fit_method}")
+    damping_peak_picking_method = sdf.compute_peak_picking_method(lin_H, lin_freq, plot=True, set_name=name_set)
+    print(f"Damping factor for pick picking method cubic: {damping_peak_picking_method}")
+    damping_circle_fit_method = sdf.compute_circle_fit_method(freq_first_mode, H1_2_first_mode, plot=True, set_name=name_set)
+    print(f"Damping factor for circle fit method: {damping_circle_fit_method}")
 
-# # part 2 
 
-# # Create the arrays based on the user's specifications
 array1       = np.arange(1, 29) 
 array2       = np.arange(31, 59) 
 array3       = np.arange(61, 79)  
 result_array = np.concatenate((array1, array2, array3))
 
-H, freq = ed.extract_H_general(result_array)
-# delta_t = 1.9531 * 10**(-3) 
-# modal   = {}
+H, freq = pld.extract_H_general(result_array)
+delta_t = 1.9531 * 10**(-3) 
+modal   = {}
 
-# # for i in tqdm(range(29,74), desc="Polymax poles", unit="Poles"):
-# # # for i in range(20,100):
-# #     w_i, damping_i, eigenval = pm.get_polymax(H, freq, i, delta_t)
+def stabilisation_diagram() :
+    print("Stabilisation diagram is running")
+    for i in tqdm(range(20,85), desc="Polymax poles", unit="Poles"):
+        w_i, damping_i, eigenval = pm.get_polymax(H, freq, i, delta_t)
 
-# #     idx            = (w_i/2/np.pi >= 13) & (w_i/2/np.pi <= 180)
-# #     _, idx_unique  = np.unique(w_i[idx], return_index=True)
-# #     modal[i]       = {
-# #         "wn"       : w_i[idx][idx_unique], 
-# #         "zeta"     : damping_i[idx][idx_unique], 
-# #         "stable"   : ["x" for _ in range(len(w_i[idx]))],
-# #         "eigenval" : eigenval[idx][idx_unique]
-# #         }
+        idx            = (w_i/2/np.pi >= 13) & (w_i/2/np.pi <= 180)
+        _, idx_unique  = np.unique(w_i[idx], return_index=True)
+        modal[i]       = {
+            "wn"       : w_i[idx][idx_unique], 
+            "zeta"     : damping_i[idx][idx_unique], 
+            "stable"   : ["x" for _ in range(len(w_i[idx]))],
+            "eigenval" : eigenval[idx][idx_unique]
+            }
 
-# # dic_order = pm.get_stabilisation(modal)
-# # pld.viz_stabilisation_diagram(modal, cmif, freq_cmif)
-# # selected_pole = [30,30,33,33,55,32,40,63,55,53,30,30,37]
-# # freq_pole = np.array([18.8371850177749, 40.132836645734095, 87.73661054907369,
-# # 89.67312969606662, 97.53280910557633, 105.18499940664444, 117.87999526512655,
-# # 125.18566897797119,125.65863056930331,130.0322772046283,
-# # 135.10023859504435,143.17255674594142,166.22251319140528])
-
-# # lambda_pole = np.zeros(len(selected_pole), dtype=complex)
-# # omega = np.zeros(len(selected_pole))
-# # idx_freq = np.zeros(len(selected_pole), dtype=int)
-
-# # for i in range(len(selected_pole)):
-# #     # Vérifier les données pour ce pole
-# #     stable_values = modal[selected_pole[i]]["stable"]
-
-# #     # Trouver les indices des 'd'
-# #     arg_stab = np.where(np.array(stable_values) == 'd')[0]
-
-# #     if len(arg_stab) == 0:
-# #         print(f"No stable poles found for pole {i}. Skipping...")
-# #         continue
-
-# #     # Extraire les valeurs correspondantes
-# #     wn_stable = np.array(modal[selected_pole[i]]["wn"])[arg_stab]
-# #     eigenval_stable = np.array(modal[selected_pole[i]]["eigenval"])[arg_stab]
+    dic_order = pm.get_stabilisation(modal)
+    vd.viz_stabilisation_diagram(dic_order, cmif, freq_cmif)
 
 
-# #     # Calculer la différence en fréquence
-# #     freq_diff = np.abs(wn_stable / (2 * np.pi) - freq_pole[i])
-# #     idx = np.argmin(freq_diff)
+def modal_analysis_with_comparaison() :
+    print("Modal analysis and compaison with Samcef is running")
+    mode_samcef = pld.extract_samcef_shock()
+    for i in range(mode_samcef.shape[0]):
+        vm.representation_mode(mode_samcef[i],nbr = i, amplifactor=50, samcef= True)
+    lambda_pole = np.array([-0.41919794 -118.39096976j, -1.00311643 -252.09465353j,
+                        -3.0413183  +551.98202178j, -2.06192248 +563.29930716j,
+                        -0.65715752 -609.91674992j, -0.31543238 +660.98898914j,
+                        -3.14291266 -741.49124913j, -3.11370721 -786.73446431j,
+                        -3.29741211 -789.05887636j, -5.49805437 -816.49573024j,
+                        -7.47931026 +849.93239504j, -5.91860892 -900.81265828j,
+                        -1.41441498+1044.67998079j])
 
-# #     # Mise à jour des résultats
-# #     lambda_pole[i] = eigenval_stable[idx]
-# #     omega[i] = wn_stable[idx]
-# #     idx_freq[i] = arg_stab[idx]
+    a = pm.compute_lsfd(lambda_pole, freq, H)
 
-# # print("Final omega (Hz):", omega / (2 * np.pi))
+    mode      = pm.extract_eigenmode(a)
+    vd.viz_argand(mode)
 
-# # print("lambda pole",lambda_pole)
-# # print("idx_freq",idx_freq)
+    abs_mode  = np.abs(mode)
+    sign      = np.sign(np.cos(np.angle(mode)))
+    real_mode = abs_mode * sign
 
+    for i in range(real_mode.shape[0]):
+        real_mode[i]       = real_mode[i] / np.max(np.abs(real_mode[i]))
+        real_mode[i,0]    *=  1
+        real_mode[i,1:28] *= -1
+        real_mode[i,28:56]*= -1
+        real_mode[i,56:62]*= -1
+        real_mode[i,62:68]*= -1
+        real_mode[i,68:74]*=  1
+    for i in range(real_mode.shape[0]):
+        vm.representation_mode(real_mode[i],nbr = i, amplifactor=50)
+    MAC         = cm.get_modal_assurance_criterion(mode_samcef, real_mode)
+    auto_MAC    = cm.get_autoMAC(real_mode)
+    vd.viz_MAC(MAC)
+    vd.viz_MAC_auto(auto_MAC, samcef = False)
+    print("All the figures are saved in the folder figures")
 
+def main():
+    parser = argparse.ArgumentParser(description="Experimental Modal Analysis Toolkit")
+    parser.add_argument(
+        '-m', '--modal_analysis', action='store_true', help="Run only the modal analysis (CMIF, peak_picking method & cirecle fit method)."
+    )
+    parser.add_argument(
+        '-s', '--stabilisation', action='store_true', help="Run only the stabilisation diagram."
+    )
+    parser.add_argument(
+        '-d', '--detailed_analysis', action='store_true', help="Run only the detailed analysis. With take into acount the mode representation and comparaison with the Samcef"
+    )
 
-lambda_pole = np.array([
-    -0.41919761 - 118.39096967j, -1.00311684 - 252.09465319j,
-    -2.95548289 + 551.98759087j, -1.9042592 + 563.35606549j,
-    -0.63729897 - 610.02198244j, -0.31541393 + 660.9890016j,
-    -6.21792925 - 741.42633958j, -2.01626186 + 786.73010206j,
-    -2.85199809 + 789.49204795j, -5.103421 - 817.43014699j,
-    -9.25476512 - 849.80643652j, -5.9185963 - 900.81266308j,
-    -1.45473844 + 1044.76438362j
-])
+    args = parser.parse_args()
 
-        
+    if not (args.modal_analysis or args.stabilisation or args.detailed_analysis):
+        print("No arguments provided, running all tasks.")
+        experimental_modal_analys()
+        stabilisation_diagram()
+        modal_analysis_with_comparaison()
+    else :
 
+        if args.modal_analysis:
+            experimental_modal_analys()
+        elif args.stabilisation:
+            stabilisation_diagram()
+        elif args.detailed_analysis:
+            modal_analysis_with_comparaison()
 
-a = pm.compute_lsfd(lambda_pole, freq, H)
-
-mode      = pm.extract_eigenmode(a)
-# print(mode)
-abs_mode  = np.abs(mode)
-sign      = np.sign(np.cos(np.angle(mode)))
-real_mode = abs_mode * sign
-
-for i in range(real_mode.shape[0]):
-    real_mode[i] = real_mode[i] / np.max(np.abs(real_mode[i]))
-    real_mode[i,0]    *= 1
-    real_mode[i,1:28] *=-1
-    real_mode[i,28:56]*=-1
-    real_mode[i,56:62]*= 1
-    real_mode[i,62:68]*= 1
-    real_mode[i,68:74]*=-1
-
-# # print(mode.shape)
-# for i in range(real_mode.shape[1]):
-#     mode_pole = real_mode[i]
-#     print("mode_pole", mode_pole.shape)
-#     rm.representation_mode(mode_pole,nbr = i, amplifactor=50)
-
-for i in range(real_mode.shape[0]):
-    rm.representation_mode(real_mode[i],nbr = i, amplifactor=50)
-
-mode_samcef = ed.extract_samcef_shock()
-MAC         = cm.get_modal_assurance_criterion(mode_samcef, real_mode)
-auto_MAC    = cm.get_autoMAC(real_mode)
-pld.viz_MAC(MAC)
-pld.viz_MAC_auto(auto_MAC)
-
-
-
-
-
+if __name__ == "__main__":
+    main()
 

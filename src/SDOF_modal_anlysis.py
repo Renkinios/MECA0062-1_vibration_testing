@@ -88,27 +88,21 @@ def compute_circle_fit_method(freq, H, plot=True, set_name="") :
     })
     points = data[['np.real(cub_freq)', 'np.imag(cub_freq)']].to_numpy()
     r, c   = nsphere.nsphere_fit(points)
-    arg_r  = np.argmax(np.abs(H))
+    t      = np.linspace(0, 2 * np.pi, 1000, endpoint=True)
+    x, y   = r * np.cos(t) + c[0], r * np.sin(t) + c[1]
+    arg_r_interpolate  = np.argmax(np.abs(x))
+    arg_r              = np.argmax(np.abs(H))
     w_r    = 2 * np.pi * freq[arg_r]
-    w_test = np.array([(np.real(H)[arg_r + 1], np.imag(H)[arg_r + 1]), (np.real(H)[arg_r - 1], np.imag(H)[arg_r - 1]), (np.real(H)[arg_r], np.imag(H)[arg_r])])
-    # r, c   = nsphere.nsphere_fit(w_test)
-
     damping_matrix = []
-    op_r    = [2 * c[0]- np.real(H)[arg_r], 2 * c[1] - np.imag(H)[arg_r]]
     a_ligne = (c[1] - np.imag(H)[arg_r]) / (c[0] - np.real(H)[arg_r])
     b       = np.imag(H)[arg_r] - a_ligne * np.real(H)[arg_r]
-    rc = (np.real(H)[arg_r] -c[0], np.imag(H)[arg_r] -c[1])
-    # t = np.linspace(0, 2 * np.pi, 1000, endpoint=True)
-    
+    rc = (x[arg_r_interpolate] -c[0], y[arg_r_interpolate] -c[1])
 
     for i in range(1, 2) :
         arg_wb = arg_r - i
         arg_wa = arg_r + i
         w_a = 2 * np.pi * freq[arg_wa]
-        w_b = 2 * np.pi * freq[arg_wb]
-        # angle_wb = np.arctan2(np.abs(np.imag(H)[arg_wb] - c[1]), np.abs(np.real(H)[arg_wb] - c[0]))
-        # angle_wa = np.arctan2(np.abs(np.imag(H)[arg_wa] - c[1]), np.abs(np.real(H)[arg_wa] - c[0]))
-    
+        w_b = 2 * np.pi * freq[arg_wb]    
         ca = (np.real(H)[arg_wa] -c[0], np.imag(H)[arg_wa] - c[1])
         cb = (np.real(H)[arg_wb] -c[0], np.imag(H)[arg_wb] -c[1])
         norme_ra = np.linalg.norm(ca)
@@ -129,27 +123,38 @@ def compute_circle_fit_method(freq, H, plot=True, set_name="") :
         if plot :
             plt.plot([c[0], np.real(H)[arg_wa]], [c[1], np.imag(H)[arg_wa]], color='#4169E1')
             plt.plot([c[0], np.real(H)[arg_wb]], [c[1], np.imag(H)[arg_wb]], color='#4169E1')
-            plt.plot([c[0], np.real(H)[arg_r]], [c[1], np.imag(H)[arg_r]], color='#4169E1')
-            plt.plot([c[0], op_r[0]], [c[1], op_r[1]], color='#4169E1')
+            plt.plot([c[0], x[arg_r_interpolate]], [c[1], y[arg_r_interpolate]], color='#4169E1')
+            # plt.plot([c[0], op_r[0]], [c[1], op_r[1]], color='#4169E1')
             plt.scatter(np.real(H)[arg_wa], np.imag(H)[arg_wa], color='#4169E1', label=f'w_r= {w_r}')
             plt.scatter(np.real(H)[arg_wb], np.imag(H)[arg_wb], color='#4169E1', label=f'w_r= {w_r}')
             # plt.plot([c[0], np.real(H)[arg_wa]], [c[1], np.imag(H)[arg_wa]], color='black')
             # plt.plot([c[0], np.real(H)[arg_wb]], [c[1], np.imag(H)[arg_wb]], color='black')
     damping_matrix = np.array(damping_matrix)
-    print("Damping matrix : ", damping_matrix)
 
     if plot :
         t = np.linspace(0, 2 * np.pi, 1000, endpoint=True)
         plt.scatter(data['np.real(cub_freq)'].to_numpy(), data['np.imag(cub_freq)'].to_numpy(), color='#800020')
-        plt.scatter(np.real(H)[arg_r], np.imag(H)[arg_r], color='#4169E1', label=f'w_r= {w_r}')
+        plt.scatter(np.real(H)[arg_r], np.imag(H)[arg_r], color='#4169E1', label=f'\omega_r= {w_r}')
+        plt.scatter(x[arg_r_interpolate], y[arg_r_interpolate], color='#4169E1', label=f'\omega_r= {w_r}')
+        plt.text(x[arg_r_interpolate] -0.004, y[arg_r_interpolate], r"$\omega_r^*$", fontsize=17, color='black')
+        plt.text(np.real(H)[arg_r]-0.004,  np.imag(H)[arg_r] - 0.003, r"$\omega_r$", fontsize=17, color='black')
+
+
         plt.scatter(c[0], c[1], color='#4169E1', label="Center")
         plt.scatter(np.real(H)[arg_wa], np.imag(H)[arg_wa], color='#4169E1', label=f'w_r= {w_r}')
+        plt.text(np.real(H)[arg_wa] + 0.001, np.imag(H)[arg_wa], r"$\omega_a$", fontsize=17, color='black')
+
         plt.scatter(np.real(H)[arg_wb], np.imag(H)[arg_wb], color='#4169E1', label=f'w_r= {w_r}')
+        plt.text(np.real(H)[arg_wb]+0.001, np.imag(H)[arg_wb] - 0.002, r"$\omega_b$", fontsize=17, color='black')
         plt.plot(r * np.cos(t) + c[0], r * np.sin(t) + c[1],  color='#4169E1')
+        plt.text(c[0]-0.003,c[1] + 0.001, r"$\theta_a$", fontsize=17, color='black')
+        plt.text(c[0]-0.002,c[1] - 0.003, r"$\theta_b$", fontsize=17, color='black')
+
         # plt.plot([np.real(H)[arg_r], op_r[0]], [np.imag(H)[arg_r], op_r[1]], color='black')
         plt.axis('equal')
-        plt.xlabel(r"Reel")
-        plt.ylabel(r"Imaginaire")
-        plt.show()
+        plt.xlabel(r"$\mathrm{Re}(H_{wing})$")
+        plt.ylabel(r"$\mathrm{Im}(H_{wing})$")
+        # plt.show()
+        plt.savefig(f"../figures/first_lab/{set_name}/circle_fit.pdf", format="pdf", dpi=300, bbox_inches='tight')
         plt.close()
     return np.mean(damping_matrix)

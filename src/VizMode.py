@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt 
-import extract_data as ed
+import PullData as ed
 import numpy as np
 
-def representation_mode(real_mode, nbr = 1, amplifactor =20):
+def representation_mode(real_mode, nbr = 1, amplifactor =20, samcef = False):
     nodes = ed.extract_node_shock("../data/node_structure.csv")
     nodes = nodes.to_numpy()
     def generate_elements(start, end, step, offset):
@@ -47,14 +47,12 @@ def representation_mode(real_mode, nbr = 1, amplifactor =20):
     
 
     real_node = nodes.astype(float)
-
-    max_real             = np.max(real_mode)
-    real_node[0,2]      += real_mode[0]    *amplifactor/max_real
-    real_node[1:28 ,2]  += real_mode[1:28] *amplifactor/max_real
-    real_node[30:58,2]  += real_mode[28:56]*amplifactor/max_real
-    real_node[60:66,2]  += real_mode[56:62]*amplifactor/max_real
-    real_node[68:74,2]  += real_mode[62:68]*amplifactor/max_real
-    real_node[76:82,0]  += real_mode[68:74]*amplifactor/max_real
+    real_node[0,2]      += real_mode[0]    *amplifactor
+    real_node[1:28 ,2]  += real_mode[1:28] *amplifactor
+    real_node[30:58,2]  += real_mode[28:56]*amplifactor
+    real_node[60:66,2]  += real_mode[56:62]*amplifactor
+    real_node[68:74,2]  += real_mode[62:68]*amplifactor
+    real_node[76:82,0]  += real_mode[68:74]*amplifactor
 
     
 
@@ -73,6 +71,11 @@ def representation_mode(real_mode, nbr = 1, amplifactor =20):
     ax.scatter(nodes[:, 0], nodes[:, 1], nodes[:,2], c='black')
 
     file_name = f"../figures/sec_lab/mode/mode_{nbr}.pdf"
+    if samcef :
+        file_name = f"../figures/sec_lab/mode_samcef/mode_{nbr}.pdf"
+    else :
+        file_name = f"../figures/sec_lab/mode/mode_{nbr}.pdf"
+
     plt.savefig (file_name, dpi=300,bbox_inches='tight')
     plt.close()
     # plt.show()
