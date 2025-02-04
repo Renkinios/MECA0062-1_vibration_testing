@@ -7,7 +7,8 @@
 #### Author: Victor Renkin s2306326
 
 #### Rapport/Slides
-The rapport of the project can be find in the link overleaf : [Rapport](https://www.overleaf.com/read/jgghjcfpsgkc#ee7e0b) --> Need to change the conclusion et i ntroduction repating a lot.
+The rapport of the project can be find in the link overleaf : [Rapport](https://www.overleaf.com/read/jgghjcfpsgkc#ee7e0b) --> Need to change the conclusion et introduction repating a lot.
+
 The slide of the project can be find in the link overlead : [Slide](https://www.overleaf.com/read/wrcmcpkkkdbx#db3e73).
 
 ## Table of Contents
